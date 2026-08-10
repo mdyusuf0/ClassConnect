@@ -35,7 +35,7 @@ const Login = ({ currentUser, onLogin }) => {
           role = parsed?.role;
         } catch (e) {}
       }
-      navigate(role === 'admin' ? '/admin' : '/dashboard', { replace: true });
+      navigate('/', { replace: true });
     }
   }, [currentUser, navigate]);
 

@@ -6,6 +6,7 @@ import {
   Check, X, Image as ImageIcon, Video, Sparkles, Radio, PlayCircle, Upload, Layers
 } from 'lucide-react';
 import store from '../data/mockStore';
+import ImageUploader from '../components/ImageUploader';
 
 const AdminCMS = ({ currentUser, onLogout }) => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -452,11 +453,12 @@ const AdminCMS = ({ currentUser, onLogout }) => {
               <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Description</label>
               <textarea value={courseForm.description} onChange={e => setCourseForm({...courseForm, description: e.target.value})} rows="3" required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none"></textarea>
             </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Cover Image Filename / Bunny Storage URL</label>
-              <input type="text" placeholder="courses/my-course-cover.jpg" value={courseForm.thumbnail} onChange={e => setCourseForm({...courseForm, thumbnail: e.target.value})} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none" />
-              <p className="text-[11px] text-gray-400 mt-1">Fetched from Bunny Storage CDN: <code className="text-amber-600 font-bold">{store.BUNNY_STORAGE_CDN}/...</code></p>
-            </div>
+            <ImageUploader 
+              value={courseForm.thumbnail} 
+              onChange={val => setCourseForm({...courseForm, thumbnail: val})} 
+              label="Upload Course Cover Image (Bunny Storage)" 
+              subfolder="courses" 
+            />
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Discounted Price (₹)</label>
@@ -533,11 +535,12 @@ const AdminCMS = ({ currentUser, onLogout }) => {
                   <input type="text" placeholder="unit1/lesson1_video.mp4" value={lectureForm.videoUrl} onChange={e => setLectureForm({...lectureForm, videoUrl: e.target.value})} required className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs font-mono outline-none" />
                   <span className="text-[10px] text-gray-400">Stream CDN: <code className="text-amber-600 font-bold">{store.BUNNY_STREAM_CDN}/...</code></span>
                 </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">Bunny Storage Thumbnail</label>
-                  <input type="text" placeholder="lessons/thumb1.jpg" value={lectureForm.thumbnailUrl} onChange={e => setLectureForm({...lectureForm, thumbnailUrl: e.target.value})} required className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs font-mono outline-none" />
-                  <span className="text-[10px] text-gray-400">Storage CDN: <code className="text-amber-600 font-bold">{store.BUNNY_STORAGE_CDN}/...</code></span>
-                </div>
+                <ImageUploader 
+                  value={lectureForm.thumbnailUrl} 
+                  onChange={val => setLectureForm({...lectureForm, thumbnailUrl: val})} 
+                  label="Upload Lecture Thumbnail" 
+                  subfolder="lessons" 
+                />
               </div>
 
               <div className="flex items-center justify-between pt-2">
@@ -677,10 +680,12 @@ const AdminCMS = ({ currentUser, onLogout }) => {
                 <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Bunny Stream RTMP/Live Feed URL</label>
                 <input type="text" placeholder="live/mern_live_stream.mp4" value={liveForm.streamUrl} onChange={e => setLiveForm({...liveForm, streamUrl: e.target.value})} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono outline-none" />
               </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Bunny Storage Cover Photo</label>
-                <input type="text" placeholder="live/cover.jpg" value={liveForm.coverImage} onChange={e => setLiveForm({...liveForm, coverImage: e.target.value})} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono outline-none" />
-              </div>
+            <ImageUploader 
+              value={liveForm.coverImage} 
+              onChange={val => setLiveForm({...liveForm, coverImage: val})} 
+              label="Upload Broadcast Cover Photo" 
+              subfolder="live" 
+            />
             </div>
             <button type="submit" className="px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl shadow cursor-pointer">
               Broadcast Session
@@ -872,10 +877,12 @@ const AdminCMS = ({ currentUser, onLogout }) => {
                 </select>
               </div>
             </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Avatar URL</label>
-              <input type="url" value={testimonialForm.avatar} onChange={e => setTestimonialForm({...testimonialForm, avatar: e.target.value})} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none" />
-            </div>
+            <ImageUploader 
+              value={testimonialForm.avatar} 
+              onChange={val => setTestimonialForm({...testimonialForm, avatar: val})} 
+              label="Upload Student Avatar Image" 
+              subfolder="avatars" 
+            />
             <div>
               <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Content</label>
               <textarea value={testimonialForm.content} onChange={e => setTestimonialForm({...testimonialForm, content: e.target.value})} rows="3" required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none"></textarea>

@@ -116,12 +116,12 @@ function App() {
         <Route path="/packages" element={<Packages currentLang={currentLang} />} />
         <Route path="/contact" element={<Contact currentLang={currentLang} />} />
         
-        {/* Auth routes with auto-redirect to dashboard if logged in */}
+        {/* Auth routes with auto-redirect to Home (/) if logged in */}
         <Route 
           path="/register" 
           element={
             isAuthenticated ? (
-              <Navigate to={targetDashboard} replace />
+              <Navigate to="/" replace />
             ) : (
               <Register currentUser={currentUser} onLogin={handleLogin} />
             )
@@ -131,7 +131,7 @@ function App() {
           path="/login" 
           element={
             isAuthenticated ? (
-              <Navigate to={targetDashboard} replace />
+              <Navigate to="/" replace />
             ) : (
               <Login currentUser={currentUser} onLogin={handleLogin} />
             )

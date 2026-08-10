@@ -206,14 +206,21 @@ export default function Navbar({ currentUser, onLogout, currentLang = 'EN', onLa
               <span className="font-bold">{currentLang === 'EN' ? 'TE (తెలుగు)' : 'EN (English)'}</span>
             </button>
 
-            {/* 3. User Auth Controls */}
+            {/* 3. User Auth Controls: Profile when logged in, Login/Register when logged out */}
             <div className="hidden sm:flex items-center gap-2">
               {currentUser ? (
                 <>
-                  <Link to={currentUser.role === 'admin' ? '/admin' : '/dashboard'} className="px-3.5 py-1.5 text-xs font-bold text-primary-container border border-primary-container rounded-xl hover:bg-primary-container hover:text-white transition-colors">
-                    {t.dashboard}
+                  <Link 
+                    to={currentUser.role === 'admin' ? '/admin' : '/dashboard'} 
+                    className="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-heading font-extrabold bg-primary-container hover:bg-primary text-white rounded-xl transition-all shadow-md"
+                    title="View Profile & Dashboard"
+                  >
+                    <div className="w-5 h-5 rounded-full bg-amber-400 text-gray-950 flex items-center justify-center text-[10px] font-extrabold">
+                      {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
+                    </div>
+                    <span>Profile</span>
                   </Link>
-                  <button onClick={onLogout} className="px-3.5 py-1.5 text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white rounded-xl transition-all shadow-sm">
+                  <button onClick={onLogout} className="px-3 py-1.5 text-xs font-bold text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors">
                     {t.logout}
                   </button>
                 </>
@@ -277,10 +284,13 @@ export default function Navbar({ currentUser, onLogout, currentLang = 'EN', onLa
         <div className="mt-auto p-5 border-t border-gray-200 flex flex-col gap-3">
           {currentUser ? (
             <>
-              <Link to={currentUser.role === 'admin' ? '/admin' : '/dashboard'} className="w-full py-2.5 text-center text-sm font-semibold border border-primary-container text-primary-container rounded-xl">
-                {t.dashboard}
+              <Link to={currentUser.role === 'admin' ? '/admin' : '/dashboard'} className="w-full py-2.5 text-center text-sm font-extrabold bg-primary-container text-white rounded-xl shadow-md flex items-center justify-center gap-2">
+                <div className="w-5 h-5 rounded-full bg-amber-400 text-gray-950 flex items-center justify-center text-[10px] font-extrabold">
+                  {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
+                </div>
+                <span>Profile & Dashboard</span>
               </Link>
-              <button onClick={() => { onLogout(); setMobileOpen(false); }} className="w-full py-2.5 text-center text-sm font-semibold bg-amber-500 text-white rounded-xl">
+              <button onClick={() => { onLogout(); setMobileOpen(false); }} className="w-full py-2.5 text-center text-sm font-semibold bg-gray-100 text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-xl transition-colors">
                 {t.logout}
               </button>
             </>
