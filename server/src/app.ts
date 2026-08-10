@@ -18,7 +18,7 @@ export const createApp = (): Express => {
   app.use('/api', apiRateLimiter);
 
   // Routes
-  app.use('/api/v1', routes);
+  app.use('/api', routes);
 
   // 404 handler
   app.use((_req, res) => {

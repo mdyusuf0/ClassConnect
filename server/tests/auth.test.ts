@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import request from 'supertest';
 import { createApp } from '../src/app.js';
 
-describe('Authentication & Roles API (/api/v1/auth)', () => {
+describe('Authentication & Roles API (/api/auth)', () => {
   const app = createApp();
   const testStudent = {
     name: 'Samir Student',
@@ -23,7 +23,7 @@ describe('Authentication & Roles API (/api/v1/auth)', () => {
   let adminToken = '';
 
   it('should register a new student with selected course and payment stub', async () => {
-    const res = await request(app).post('/api/v1/auth/register').send(testStudent);
+    const res = await request(app).post('/api/auth/register').send(testStudent);
     expect(res.status).toBe(201);
     expect(res.body.success).toBe(true);
     expect(res.body.accessToken).toBeDefined();
@@ -34,7 +34,7 @@ describe('Authentication & Roles API (/api/v1/auth)', () => {
   });
 
   it('should register an admin user', async () => {
-    const res = await request(app).post('/api/v1/auth/register').send(testAdmin);
+    const res = await request(app).post('/api/auth/register').send(testAdmin);
     expect(res.status).toBe(201);
     expect(res.body.success).toBe(true);
     expect(res.body.user.role).toBe('admin');
@@ -42,7 +42,7 @@ describe('Authentication & Roles API (/api/v1/auth)', () => {
   });
 
   it('should log in student with correct credentials', async () => {
-    const res = await request(app).post('/api/v1/auth/login').send({
+    const res = await request(app).post('/api/auth/login').send({
       email: testStudent.email,
       password: testStudent.password,
     });
@@ -52,7 +52,7 @@ describe('Authentication & Roles API (/api/v1/auth)', () => {
   });
 
   it('should reject login with wrong password', async () => {
-    const res = await request(app).post('/api/v1/auth/login').send({
+    const res = await request(app).post('/api/auth/login').send({
       email: testStudent.email,
       password: 'wrongpassword',
     });
@@ -62,7 +62,7 @@ describe('Authentication & Roles API (/api/v1/auth)', () => {
 
   it('should allow admin token to access admin-only endpoint', async () => {
     const res = await request(app)
-      .get('/api/v1/admin/dashboard-stats')
+      .get('/api/admin/dashboard-stats')
       .set('Authorization', `Bearer ${adminToken}`);
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
@@ -70,7 +70,7 @@ describe('Authentication & Roles API (/api/v1/auth)', () => {
 
   it('should forbid student token from accessing admin-only endpoint', async () => {
     const res = await request(app)
-      .get('/api/v1/admin/dashboard-stats')
+      .get('/api/admin/dashboard-stats')
       .set('Authorization', `Bearer ${studentToken}`);
     expect(res.status).toBe(403);
     expect(res.body.success).toBe(false);

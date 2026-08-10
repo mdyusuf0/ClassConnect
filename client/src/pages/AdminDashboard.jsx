@@ -76,16 +76,16 @@ export default function AdminDashboard() {
       <div className="card glass-panel p-6 rounded-2xl border border-white/10 space-y-4">
         <h3 className="text-lg font-bold text-white">Admin Management Actions</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          <div className="p-4 rounded-xl bg-slate-900/60 border border-white/5 space-y-2">
+          <Link to="/admin/courses" className="p-4 rounded-xl bg-slate-900/60 border border-white/5 space-y-2 hover:border-indigo-500/50 transition-all block">
             <div className="font-bold text-sm text-white">Course CMS Management</div>
             <p className="text-xs text-slate-400">Create, edit units, and upload video lessons to Bunny.net.</p>
-          </div>
+          </Link>
+          <Link to="/admin/payments" className="p-4 rounded-xl bg-slate-900/60 border border-white/5 space-y-2 hover:border-emerald-500/50 transition-all block">
+            <div className="font-bold text-sm text-white">Payments & Refunds Ledger</div>
+            <p className="text-xs text-slate-400">View Stripe & Razorpay transactions and process refunds.</p>
+          </Link>
           <div className="p-4 rounded-xl bg-slate-900/60 border border-white/5 space-y-2">
-            <div className="font-bold text-sm text-white">Live Class Scheduler</div>
-            <p className="text-xs text-slate-400">Schedule live rooms and enable auto-recording convert.</p>
-          </div>
-          <div className="p-4 rounded-xl bg-slate-900/60 border border-white/5 space-y-2">
-            <div className="font-bold text-sm text-white">Referrals & Payouts</div>
+            <div className="font-bold text-sm text-white">Referrals & Settings</div>
             <p className="text-xs text-slate-400">Configure commission percentage and approve wallet requests.</p>
           </div>
         </div>

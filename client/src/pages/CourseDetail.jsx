@@ -79,7 +79,7 @@ export default function CourseDetail() {
             </div>
 
             <Link
-              to="/register"
+              to={`/checkout/${course._id || course.id || course.slug}`}
               className="btn bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:to-pink-600 text-white border-0 w-full shadow-lg shadow-indigo-500/25 text-sm font-bold gap-2"
             >
               Enroll Now & Start Learning <ArrowRight className="w-4 h-4" />

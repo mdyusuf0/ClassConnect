@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Catalog from '../pages/Catalog';
 import CourseDetail from '../pages/CourseDetail';
+import Checkout from '../pages/Checkout';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
 import ForgotPassword from '../pages/ForgotPassword';
@@ -12,6 +13,7 @@ import AdminDashboard from '../pages/AdminDashboard';
 import AdminCourseList from '../pages/admin/AdminCourseList';
 import AdminCourseForm from '../pages/admin/AdminCourseForm';
 import AdminUnitLessonManager from '../pages/admin/AdminUnitLessonManager';
+import AdminPayments from '../pages/admin/AdminPayments';
 import { RequireRole } from '../components/ProtectedRoute';
 
 export default function AppRoutes() {
@@ -20,6 +22,7 @@ export default function AppRoutes() {
       {/* Public Catalog Routes */}
       <Route path="/" element={<Catalog />} />
       <Route path="/courses/:slugOrId" element={<CourseDetail />} />
+      <Route path="/checkout/:courseId" element={<Checkout />} />
 
       {/* Auth Routes */}
       <Route path="/login" element={<Login />} />
@@ -83,6 +86,14 @@ export default function AppRoutes() {
         element={
           <RequireRole allowedRoles={['admin']}>
             <AdminUnitLessonManager />
+          </RequireRole>
+        }
+      />
+      <Route
+        path="/admin/payments"
+        element={
+          <RequireRole allowedRoles={['admin']}>
+            <AdminPayments />
           </RequireRole>
         }
       />

@@ -216,7 +216,7 @@ export const updateLessonProgress = async (req: AuthenticatedRequest, res: Respo
         studentName: req.user.email.split('@')[0],
         courseTitle: 'Full Stack Web Development Bootcamp',
         issuedDate: new Date(),
-        pdfUrl: `/api/v1/certificates/${certId}/download`,
+        pdfUrl: `/api/certificates/${certId}/download`,
       };
 
       if (isDbConnected()) {

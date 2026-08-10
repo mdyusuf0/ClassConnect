@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api/v1',
+  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -133,6 +133,27 @@ export const downloadCertificateApi = async (certificateId) => {
   const res = await api.get(`/certificates/${certificateId}/download`, {
     responseType: 'blob',
   });
+  return res.data;
+};
+
+// Payments & Admin Refunds API
+export const createPaymentOrderApi = async (orderData) => {
+  const res = await api.post('/payments/create-order', orderData);
+  return res.data;
+};
+
+export const confirmPaymentApi = async (confirmData) => {
+  const res = await api.post('/payments/confirm', confirmData);
+  return res.data;
+};
+
+export const getAdminPaymentsApi = async () => {
+  const res = await api.get('/admin/payments');
+  return res.data;
+};
+
+export const issueRefundApi = async (transactionId, reasonData) => {
+  const res = await api.post(`/admin/payments/${transactionId}/refund`, reasonData);
   return res.data;
 };
 
