@@ -60,9 +60,9 @@ export default function StudentDashboard() {
                 <span className="flex items-center gap-1 text-slate-400"><Award className="w-3.5 h-3.5" /> Locked Certificate</span>
               </div>
 
-              <button className="btn bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 w-full shadow-lg shadow-indigo-500/20">
-                <PlayCircle className="w-4 h-4" /> Resume Unit 1
-              </button>
+              <Link to="/learn/course_web_dev_101" className="btn bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 w-full shadow-lg shadow-indigo-500/20">
+                <PlayCircle className="w-4 h-4" /> Start Learning / Resume Player
+              </Link>
             </div>
           </div>
         </div>

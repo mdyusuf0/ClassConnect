@@ -118,4 +118,22 @@ export const uploadBunnyAssetApi = async (assetData) => {
   return res.data;
 };
 
+// Progress & Certificates API
+export const getCourseProgressApi = async (courseId) => {
+  const res = await api.get(`/progress/courses/${courseId}`);
+  return res.data;
+};
+
+export const updateLessonProgressApi = async (progressData) => {
+  const res = await api.post('/progress/update', progressData);
+  return res.data;
+};
+
+export const downloadCertificateApi = async (certificateId) => {
+  const res = await api.get(`/certificates/${certificateId}/download`, {
+    responseType: 'blob',
+  });
+  return res.data;
+};
+
 export default api;

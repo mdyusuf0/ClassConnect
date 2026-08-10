@@ -7,6 +7,7 @@ import Register from '../pages/Register';
 import ForgotPassword from '../pages/ForgotPassword';
 import ResetPassword from '../pages/ResetPassword';
 import StudentDashboard from '../pages/StudentDashboard';
+import CoursePlayer from '../pages/CoursePlayer';
 import AdminDashboard from '../pages/AdminDashboard';
 import AdminCourseList from '../pages/admin/AdminCourseList';
 import AdminCourseForm from '../pages/admin/AdminCourseForm';
@@ -32,6 +33,14 @@ export default function AppRoutes() {
         element={
           <RequireRole allowedRoles={['student', 'admin']}>
             <StudentDashboard />
+          </RequireRole>
+        }
+      />
+      <Route
+        path="/learn/:courseId"
+        element={
+          <RequireRole allowedRoles={['student', 'admin']}>
+            <CoursePlayer />
           </RequireRole>
         }
       />

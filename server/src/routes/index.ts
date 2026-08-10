@@ -2,6 +2,7 @@ import { Router } from 'express';
 import healthRoutes from './health.routes.js';
 import authRoutes from '../modules/auth/auth.routes.js';
 import courseRoutes from '../modules/courses/course.routes.js';
+import progressRoutes from '../modules/progress/progress.routes.js';
 import { authenticate, authorize } from '../middleware/auth.middleware.js';
 
 const router = Router();
@@ -9,6 +10,7 @@ const router = Router();
 router.use('/', healthRoutes);
 router.use('/auth', authRoutes);
 router.use('/', courseRoutes);
+router.use('/', progressRoutes);
 
 // Role Protection Test Endpoints
 router.get('/admin/dashboard-stats', authenticate, authorize('admin'), (_req, res) => {
