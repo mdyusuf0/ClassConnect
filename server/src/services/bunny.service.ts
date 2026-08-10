@@ -20,18 +20,18 @@ export class BunnyService {
     const cleanFileName = `${Date.now()}_${fileName.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
     const destinationPath = `${folder}/${cleanFileName}`;
 
-    if (env.BUNNY_STORAGE_API_KEY === 'mock_bunny_api_key' || process.env.NODE_ENV === 'test') {
-      const mockCdnUrl = `${env.BUNNY_CDN_URL}/${destinationPath}`;
+    if (env.BUNNY_STORAGE_API_KEY === 'mock_storage_key' || process.env.NODE_ENV === 'test') {
+      const mockCdnUrl = `${env.BUNNY_STORAGE_CDN_URL}/${destinationPath}`;
       return {
         url: mockCdnUrl,
         filename: cleanFileName,
-        storageZone: env.BUNNY_STORAGE_ZONE_NAME,
+        storageZone: env.BUNNY_STORAGE_ZONE,
         cdnUrl: mockCdnUrl,
       };
     }
 
     try {
-      const uploadUrl = `https://storage.bunny.net/${env.BUNNY_STORAGE_ZONE_NAME}/${destinationPath}`;
+      const uploadUrl = `https://storage.bunny.net/${env.BUNNY_STORAGE_ZONE}/${destinationPath}`;
       const response = await fetch(uploadUrl, {
         method: 'PUT',
         headers: {
@@ -45,20 +45,20 @@ export class BunnyService {
         throw new Error(`Bunny.net upload failed with status ${response.status}`);
       }
 
-      const cdnUrl = `${env.BUNNY_CDN_URL}/${destinationPath}`;
+      const cdnUrl = `${env.BUNNY_STORAGE_CDN_URL}/${destinationPath}`;
       return {
         url: cdnUrl,
         filename: cleanFileName,
-        storageZone: env.BUNNY_STORAGE_ZONE_NAME,
+        storageZone: env.BUNNY_STORAGE_ZONE,
         cdnUrl,
       };
     } catch (error) {
       console.warn('[BunnyService] Falling back to mock CDN URL due to upload error:', (error as Error).message);
-      const fallbackUrl = `${env.BUNNY_CDN_URL}/${destinationPath}`;
+      const fallbackUrl = `${env.BUNNY_STORAGE_CDN_URL}/${destinationPath}`;
       return {
         url: fallbackUrl,
         filename: cleanFileName,
-        storageZone: env.BUNNY_STORAGE_ZONE_NAME,
+        storageZone: env.BUNNY_STORAGE_ZONE,
         cdnUrl: fallbackUrl,
       };
     }
@@ -68,7 +68,7 @@ export class BunnyService {
    * Generates video streaming embed URL
    */
   static getVideoStreamUrl(videoId: string): string {
-    return `${env.BUNNY_CDN_URL}/embed/${videoId}`;
+    return `${env.BUNNY_STREAM_CDN_URL}/embed/${videoId}`;
   }
 
   /**

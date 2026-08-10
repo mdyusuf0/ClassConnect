@@ -8,23 +8,15 @@ export const connectRedis = async (): Promise<boolean> => {
     return true;
   }
   try {
-    if (env.REDIS_HOST) {
-      redisClient = new Redis({
-        host: env.REDIS_HOST,
-        port: env.REDIS_PORT,
-        password: env.REDIS_PASSWORD,
-        username: env.REDIS_USERNAME,
-        lazyConnect: true,
-        maxRetriesPerRequest: 1,
-        connectTimeout: 3000,
-      });
-    } else {
-      redisClient = new Redis(env.REDIS_URL, {
-        lazyConnect: true,
-        maxRetriesPerRequest: 1,
-        connectTimeout: 3000,
-      });
-    }
+    redisClient = new Redis({
+      host: env.REDIS_HOST,
+      port: env.REDIS_PORT,
+      username: env.REDIS_USERNAME,
+      password: env.REDIS_PASSWORD,
+      lazyConnect: true,
+      maxRetriesPerRequest: 1,
+      connectTimeout: 3000,
+    });
 
     redisClient.on('error', (err) => {
       console.warn('[Redis] Connection warning:', err.message);

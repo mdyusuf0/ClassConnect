@@ -6,7 +6,7 @@ export const connectDatabase = async (): Promise<boolean> => {
     return true; // Skip actual connection during unit test execution
   }
   try {
-    await mongoose.connect(env.MONGODB_URI, {
+    await mongoose.connect(env.MONGO_URI, {
       serverSelectionTimeoutMS: 3000,
     });
     console.log('[Database] Connected to MongoDB successfully.');
