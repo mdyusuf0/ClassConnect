@@ -13,6 +13,7 @@ import Register from './pages/Register';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import AdminCMS from './pages/AdminCMS';
+import Profile from './pages/Profile';
 
 // Cookie helper
 function getCookie(name) {
@@ -139,6 +140,7 @@ function App() {
         />
         
         <Route path="/dashboard" element={<Dashboard currentUser={currentUser} onLogout={handleLogout} />} />
+        <Route path="/profile" element={<Profile currentUser={currentUser} onUpdateUser={setCurrentUser} />} />
         <Route path="/admin/*" element={<AdminCMS currentUser={currentUser} onLogout={handleLogout} />} />
       </Routes>
       {!isTransactional && <Footer currentLang={currentLang} />}

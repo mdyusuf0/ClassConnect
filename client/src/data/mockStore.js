@@ -1183,6 +1183,20 @@ const store = {
     return user || null;
   },
 
+  updateUserProfile(userId, profileData) {
+    const data = this.getData();
+    const user = data.users.find(u => u.id === userId);
+    if (user) {
+      Object.assign(user, profileData);
+      if (profileData.aadhaarNumber && profileData.aadhaarNumber.trim().length === 12) {
+        user.aadhaarVerified = true;
+      }
+      saveData(data);
+      return user;
+    }
+    return null;
+  },
+
   updateUserBankDetails(userId, bankDetails) {
     const data = this.getData();
     const user = data.users.find(u => u.id === userId);
@@ -1197,20 +1211,27 @@ const store = {
     return this.getData().referralLog;
   },
 
-  getReferralsByUser(userId) {
+  getReferralsForUser(userId) {
     return this.getReferralLog().filter(r => r.referrerId === userId);
   },
 
   // Payout Requests
-  requestPayout(userId, amount) {
+  requestPayout(userId, amount, upiId) {
     const data = this.getData();
     const user = data.users.find(u => u.id === userId);
+    
+    // MANDATORY SECURITY RULE: Aadhaar Verification required
+    if (!user || (!user.aadhaarVerified && (!user.aadhaarNumber || user.aadhaarNumber.trim().length < 12))) {
+      throw new Error("Security Policy Violation: 12-digit Aadhaar Verification is mandatory before requesting referral commission money transfers. Please update your profile with your Aadhaar Number.");
+    }
+
     if (user && user.pendingPayout >= amount) {
       const request = {
         id: 'payout-' + Date.now(),
         userId,
         userName: user.name,
         amount,
+        upiId: upiId || user.bankDetails?.upiId || 'user@upi',
         bankDetails: user.bankDetails,
         status: 'pending',
         requestDate: new Date().toISOString(),

@@ -311,6 +311,14 @@ const AdminCMS = ({ currentUser, onLogout }) => {
               <span>{item.label}</span>
             </button>
           ))}
+
+          <Link
+            to="/profile"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-heading font-bold text-xs uppercase tracking-wider transition-all text-amber-300 hover:bg-white/10 hover:text-white border border-amber-500/30 bg-amber-500/10 mt-2"
+          >
+            <ShieldCheck size={18} className="text-amber-400" />
+            <span>Profile & Aadhaar KYC</span>
+          </Link>
         </nav>
       </div>
 
