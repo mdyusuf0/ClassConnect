@@ -1,12 +1,48 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import store from '../data/mockStore';
-import { Clock, BookOpen, BarChart, User, CheckCircle, ArrowLeft, ShieldCheck, Zap } from 'lucide-react';
+import { Clock, BookOpen, BarChart, User, CheckCircle, ArrowLeft, PlayCircle, Video, Layers, Lock, Play } from 'lucide-react';
 
 export default function CourseDetail() {
   const { id } = useParams();
   const course = store.getCourseById(Number(id) || id);
   const packages = store.getPackages().filter(p => p.courses && p.courses.includes(course?.id));
+
+  // Determine units / lessons
+  const defaultUnits = course?.units && course.units.length > 0 ? course.units : [
+    {
+      unitNumber: 1,
+      title: 'Unit 1: Fundamentals & Environment Setup',
+      lessons: [
+        { id: 'l1', title: 'Lesson 1.1: Masterclass Overview & Roadmap', duration: '12:45', videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', isFreePreview: true },
+        { id: 'l2', title: 'Lesson 1.2: Essential Tools & Dashboard Walkthrough', duration: '18:20', videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4', isFreePreview: true },
+      ]
+    },
+    {
+      unitNumber: 2,
+      title: 'Unit 2: Hands-On Execution & Optimization',
+      lessons: [
+        { id: 'l3', title: 'Lesson 2.1: Practical Campaign Setup & Ad Copy', duration: '24:10', videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4', isFreePreview: false },
+        { id: 'l4', title: 'Lesson 2.2: Retargeting, Analytics & Scaling ROI', duration: '30:15', videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4', isFreePreview: false },
+      ]
+    }
+  ];
+
+  const [activeLesson, setActiveLesson] = useState(defaultUnits[0]?.lessons[0]);
+  const [videoSrc, setVideoSrc] = useState(
+    activeLesson?.videoUrl ? store.formatBunnyStreamUrl(activeLesson.videoUrl) : 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
+  );
+
+  const handleSelectLesson = (lesson) => {
+    setActiveLesson(lesson);
+    const formatted = store.formatBunnyStreamUrl(lesson.videoUrl);
+    setVideoSrc(formatted);
+  };
+
+  const handleVideoError = () => {
+    // Fallback to sample video if Bunny Stream key is unreachable
+    setVideoSrc('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4');
+  };
 
   if (!course) {
     return (
@@ -28,6 +64,8 @@ export default function CourseDetail() {
     "Build portfolio-ready projects demonstrating your expertise.",
     "Earn official digital certificate of completion upon finishing."
   ];
+
+  const coverImg = store.formatBunnyStorageUrl(course.thumbnail, 'courses');
 
   return (
     <div className="bg-[#F5F9FA] min-h-screen pb-16">
@@ -64,21 +102,99 @@ export default function CourseDetail() {
       {/* Main Content & Sidebar */}
       <div className="max-w-7xl mx-auto px-4 lg:px-8 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+          
           {/* Main Left Content */}
           <div className="lg:col-span-8 space-y-8">
-            <div className="bg-white rounded-3xl overflow-hidden shadow-md border border-gray-200">
-              <img 
-                src={course.thumbnail} 
-                alt={course.title} 
-                className="w-full h-80 md:h-[400px] object-cover" 
-              />
-              <div className="p-6 md:p-8">
-                <h2 className="font-heading font-extrabold text-2xl text-gray-900 mb-4">Course Overview</h2>
-                <p className="text-gray-600 text-sm md:text-base leading-relaxed mb-4">{course.description}</p>
-                <p className="text-gray-600 text-sm md:text-base leading-relaxed">
-                  This comprehensive masterclass provides a complete step-by-step roadmap to master {course.title}. You will gain both theoretical understanding and hands-on execution skills with 2026 industry standards.
-                </p>
+            
+            {/* Interactive Unit Lecture Video Player */}
+            <div className="bg-black rounded-3xl overflow-hidden shadow-xl border border-gray-800">
+              <div className="relative aspect-video bg-gray-900 flex items-center justify-center">
+                <video 
+                  key={videoSrc}
+                  controls 
+                  autoPlay={false}
+                  onError={handleVideoError}
+                  poster={coverImg}
+                  className="w-full h-full object-cover"
+                >
+                  <source src={videoSrc} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
               </div>
+
+              <div className="p-5 bg-gray-900 text-white flex items-center justify-between border-t border-gray-800">
+                <div className="space-y-1">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                    <Video size={13} /> Active Lecture Stream
+                  </span>
+                  <h3 className="font-heading font-extrabold text-base text-white">{activeLesson?.title}</h3>
+                </div>
+                <span className="text-xs font-mono text-gray-400 bg-gray-800 px-3 py-1 rounded-lg border border-gray-700">
+                  {activeLesson?.duration || '15:00'}
+                </span>
+              </div>
+            </div>
+
+            {/* Unit Curriculum List */}
+            <div className="bg-white rounded-3xl p-6 md:p-8 shadow-md border border-gray-200 space-y-4">
+              <h2 className="font-heading font-extrabold text-2xl text-gray-900 flex items-center gap-2">
+                <Layers className="text-amber-500" size={24} /> Unit-Wise Course Curriculum
+              </h2>
+
+              <div className="space-y-4">
+                {defaultUnits.map((unit, uIdx) => (
+                  <div key={uIdx} className="bg-gray-50 border border-gray-200 rounded-2xl p-4 space-y-3">
+                    <div className="flex items-center justify-between border-b border-gray-200 pb-2">
+                      <h4 className="font-heading font-extrabold text-sm text-primary-container uppercase tracking-wider">
+                        {unit.title || `Unit ${unit.unitNumber}`}
+                      </h4>
+                      <span className="text-xs font-bold text-gray-500">{unit.lessons?.length || 0} Lectures</span>
+                    </div>
+
+                    <div className="space-y-2">
+                      {unit.lessons?.map((les, lIdx) => {
+                        const isCurrent = activeLesson?.id === les.id;
+                        return (
+                          <div 
+                            key={lIdx}
+                            onClick={() => handleSelectLesson(les)}
+                            className={`p-3 rounded-xl border flex items-center justify-between transition-all cursor-pointer ${
+                              isCurrent 
+                                ? 'bg-amber-500/10 border-amber-500 text-amber-900 font-bold shadow-sm' 
+                                : 'bg-white border-gray-200/80 hover:bg-amber-50/50 text-gray-800'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={`p-2 rounded-lg ${isCurrent ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-500'}`}>
+                                <Play size={14} />
+                              </div>
+                              <span className="text-xs font-semibold">{les.title}</span>
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                              <span className="text-[11px] font-mono text-gray-500">{les.duration}</span>
+                              {les.isFreePreview ? (
+                                <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-extrabold rounded uppercase">Preview</span>
+                              ) : (
+                                <Lock size={12} className="text-gray-400" />
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Course Overview */}
+            <div className="bg-white rounded-3xl p-6 md:p-8 shadow-md border border-gray-200">
+              <h2 className="font-heading font-extrabold text-2xl text-gray-900 mb-4">Course Overview</h2>
+              <p className="text-gray-600 text-sm md:text-base leading-relaxed mb-4">{course.description}</p>
+              <p className="text-gray-600 text-sm md:text-base leading-relaxed">
+                This comprehensive masterclass provides a complete step-by-step roadmap to master {course.title}. You will gain both theoretical understanding and hands-on execution skills with 2026 industry standards.
+              </p>
             </div>
 
             {/* Learning Outcomes */}

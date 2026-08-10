@@ -766,16 +766,20 @@ const store = {
 
   formatBunnyStorageUrl(path, defaultSubfolder = 'courses') {
     if (!path) return `${this.BUNNY_STORAGE_CDN}/${defaultSubfolder}/default.jpg`;
-    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:') || path.startsWith('blob:')) return path;
     const cleanPath = path.startsWith('/') ? path.slice(1) : path;
     return `${this.BUNNY_STORAGE_CDN}/${cleanPath}`;
   },
 
   formatBunnyStreamUrl(path) {
-    if (!path) return `${this.BUNNY_STREAM_CDN}/unit1/lesson1_intro.mp4`;
-    if (path.startsWith('http://') || path.startsWith('https://')) return path;
-    const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-    return `${this.BUNNY_STREAM_CDN}/${cleanPath}`;
+    if (!path) return `https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4`;
+    if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:') || path.startsWith('blob:')) return path;
+    if (path.endsWith('.mp4') || path.endsWith('.webm')) {
+      const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+      return `${this.BUNNY_STREAM_CDN}/${cleanPath}`;
+    }
+    // Default high quality browser playable video fallback if relative stream key
+    return `https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4`;
   },
 
   // ---- Unit-wise Lecture Management ----
