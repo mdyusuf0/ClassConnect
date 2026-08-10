@@ -61,8 +61,9 @@ export default function Courses({ currentLang = 'EN' }) {
           ))}
         </div>
 
-        {/* Courses Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {/* Courses Grid with display viewport bounds */}
+        <div className="max-h-[calc(100vh-260px)] overflow-y-auto pr-2 pb-6 custom-scrollbar">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredCourses.map(course => (
             <div key={course.id} className="premium-course-card group">
                 <div className="card-media-wrapper">
@@ -102,6 +103,7 @@ export default function Courses({ currentLang = 'EN' }) {
                 </div>
             </div>
           ))}
+          </div>
         </div>
 
         {filteredCourses.length === 0 && (

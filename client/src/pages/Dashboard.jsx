@@ -20,6 +20,7 @@ import {
   Play
 } from 'lucide-react';
 import store from '../data/mockStore';
+import LiveStudio from '../components/LiveStudio';
 
 const Dashboard = ({ currentUser, onLogout }) => {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ const Dashboard = ({ currentUser, onLogout }) => {
   const [referrals, setReferrals] = useState([]);
   const [enrolledPackage, setEnrolledPackage] = useState(null);
   const [liveSessions, setLiveSessions] = useState([]);
+  const [activeStudioSession, setActiveStudioSession] = useState(null);
   
   const [bankDetails, setBankDetails] = useState({
     bankName: '',
@@ -393,15 +395,13 @@ const Dashboard = ({ currentUser, onLogout }) => {
                         </div>
                       </div>
 
-                      <a 
-                        href={session.streamUrl} 
-                        target="_blank" 
-                        rel="noreferrer"
-                        className="w-full py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl shadow transition-all flex items-center justify-center gap-2"
+                      <button 
+                        onClick={() => setActiveStudioSession(session)}
+                        className="w-full py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl shadow transition-all flex items-center justify-center gap-2 cursor-pointer"
                       >
                         <Play size={16} />
-                        <span>{session.status === 'LIVE_NOW' ? 'Join Live Stream' : 'Watch Recording'}</span>
-                      </a>
+                        <span>{session.status === 'LIVE_NOW' ? 'Join Live Interactive Broadcast Studio' : 'Watch Recording Studio'}</span>
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -572,6 +572,20 @@ const Dashboard = ({ currentUser, onLogout }) => {
 
         </div>
       </main>
+
+      {/* Fullscreen Broadcast Studio Overlay */}
+      {activeStudioSession && (
+        <LiveStudio 
+          session={activeStudioSession} 
+          onClose={() => setActiveStudioSession(null)} 
+          onUpdateStatus={(id, status) => {
+            if (store.updateLiveSessionStatus) {
+              store.updateLiveSessionStatus(id, status);
+            }
+            setLiveSessions(store.getLiveSessions ? store.getLiveSessions() : []);
+          }}
+        />
+      )}
     </div>
   );
 };

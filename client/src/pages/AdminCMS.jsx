@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import store from '../data/mockStore';
 import ImageUploader from '../components/ImageUploader';
+import LiveStudio from '../components/LiveStudio';
 
 const AdminCMS = ({ currentUser, onLogout }) => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -39,6 +40,7 @@ const AdminCMS = ({ currentUser, onLogout }) => {
 
   // Live Session State
   const [showLiveForm, setShowLiveForm] = useState(false);
+  const [activeStudioSession, setActiveStudioSession] = useState(null);
   const [liveForm, setLiveForm] = useState({
     title: '', instructor: 'ClassConnect Mentors', courseId: '', scheduledAt: '', 
     streamUrl: 'live/masterclass_stream.mp4', coverImage: 'live/cover_thumb.jpg', recordingUrl: ''
@@ -492,8 +494,8 @@ const AdminCMS = ({ currentUser, onLogout }) => {
 
       {/* Unit-Wise Lecture Manager Modal */}
       {activeLectureCourse && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-3xl w-full p-6 md:p-8 space-y-6 shadow-2xl my-8">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl max-w-3xl w-full p-6 md:p-8 space-y-6 shadow-2xl my-auto max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-gray-200 pb-4">
               <div>
                 <h3 className="font-heading font-extrabold text-xl text-gray-900">Unit-Wise Lecture Manager</h3>
@@ -725,18 +727,26 @@ const AdminCMS = ({ currentUser, onLogout }) => {
                   </span>
                 </td>
                 <td className="py-3 px-4">
-                  <button 
-                    className={`px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider rounded-lg shadow transition-all cursor-pointer ${
-                      session.status === 'SCHEDULED' 
-                        ? 'bg-red-600 hover:bg-red-700 text-white' 
-                        : session.status === 'LIVE_NOW'
-                        ? 'bg-gray-800 hover:bg-black text-white'
-                        : 'bg-amber-500 hover:bg-amber-600 text-white'
-                    }`}
-                    onClick={() => handleToggleLiveStatus(session)}
-                  >
-                    {session.status === 'SCHEDULED' ? 'GO LIVE NOW' : session.status === 'LIVE_NOW' ? 'END STREAM' : 'RESTART'}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button 
+                      className="px-3 py-1.5 text-[10px] font-extrabold bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white uppercase tracking-wider rounded-lg shadow transition-all cursor-pointer flex items-center gap-1"
+                      onClick={() => setActiveStudioSession(session)}
+                    >
+                      <Radio size={12} /> Launch Studio
+                    </button>
+                    <button 
+                      className={`px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider rounded-lg shadow transition-all cursor-pointer ${
+                        session.status === 'SCHEDULED' 
+                          ? 'bg-amber-500 hover:bg-amber-600 text-white' 
+                          : session.status === 'LIVE_NOW'
+                          ? 'bg-gray-800 hover:bg-black text-white'
+                          : 'bg-gray-500 hover:bg-gray-600 text-white'
+                      }`}
+                      onClick={() => handleToggleLiveStatus(session)}
+                    >
+                      {session.status === 'SCHEDULED' ? 'GO LIVE' : session.status === 'LIVE_NOW' ? 'END STREAM' : 'RESTART'}
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -1047,6 +1057,18 @@ const AdminCMS = ({ currentUser, onLogout }) => {
       <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto min-w-0">
         {renderContent()}
       </main>
+
+      {/* Fullscreen Broadcast Studio Environment */}
+      {activeStudioSession && (
+        <LiveStudio 
+          session={activeStudioSession} 
+          onClose={() => setActiveStudioSession(null)} 
+          onUpdateStatus={(id, status) => {
+            store.updateLiveSessionStatus(id, status);
+            loadData();
+          }}
+        />
+      )}
     </div>
   );
 };
