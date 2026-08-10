@@ -84,10 +84,10 @@ export default function AdminDashboard() {
             <div className="font-bold text-sm text-white">Payments & Refunds Ledger</div>
             <p className="text-xs text-slate-400">View Stripe & Razorpay transactions and process refunds.</p>
           </Link>
-          <div className="p-4 rounded-xl bg-slate-900/60 border border-white/5 space-y-2">
-            <div className="font-bold text-sm text-white">Referrals & Settings</div>
+          <Link to="/admin/referrals" className="p-4 rounded-xl bg-slate-900/60 border border-white/5 space-y-2 hover:border-purple-500/50 transition-all block">
+            <div className="font-bold text-sm text-white">Referrals & CMS Settings</div>
             <p className="text-xs text-slate-400">Configure commission percentage and approve wallet requests.</p>
-          </div>
+          </Link>
         </div>
       </div>
     </div>

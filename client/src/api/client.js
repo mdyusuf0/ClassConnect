@@ -157,4 +157,35 @@ export const issueRefundApi = async (transactionId, reasonData) => {
   return res.data;
 };
 
+// Referral Program & CMS Settings API
+export const getReferralDashboardApi = async () => {
+  const res = await api.get('/referrals/dashboard');
+  return res.data;
+};
+
+export const requestPayoutApi = async (payoutData) => {
+  const res = await api.post('/referrals/payout-request', payoutData);
+  return res.data;
+};
+
+export const getAdminReferralSettingsApi = async (courseId) => {
+  const res = await api.get(`/admin/referrals/settings/${courseId}`);
+  return res.data;
+};
+
+export const updateAdminReferralSettingsApi = async (courseId, settingData) => {
+  const res = await api.put(`/admin/referrals/settings/${courseId}`, settingData);
+  return res.data;
+};
+
+export const getAdminPayoutsApi = async () => {
+  const res = await api.get('/admin/referrals/payouts');
+  return res.data;
+};
+
+export const processAdminPayoutApi = async (requestId, processData) => {
+  const res = await api.post(`/admin/referrals/payouts/${requestId}`, processData);
+  return res.data;
+};
+
 export default api;

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { BookOpen, LogOut, User, Shield, LogIn, LayoutDashboard } from 'lucide-react';
+import { BookOpen, LogOut, User, Shield, LogIn, LayoutDashboard, Share2 } from 'lucide-react';
 
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -58,13 +58,23 @@ export default function Navbar() {
                   </div>
                 </li>
                 {user?.role === 'admin' ? (
-                  <li>
-                    <Link to="/admin"><Shield className="w-4 h-4 text-purple-400" /> Admin Dashboard</Link>
-                  </li>
+                  <>
+                    <li>
+                      <Link to="/admin"><Shield className="w-4 h-4 text-purple-400" /> Admin Dashboard</Link>
+                    </li>
+                    <li>
+                      <Link to="/admin/referrals"><Share2 className="w-4 h-4 text-emerald-400" /> Referral CMS & Payouts</Link>
+                    </li>
+                  </>
                 ) : (
-                  <li>
-                    <Link to="/dashboard"><User className="w-4 h-4 text-indigo-400" /> Student Dashboard</Link>
-                  </li>
+                  <>
+                    <li>
+                      <Link to="/dashboard"><User className="w-4 h-4 text-indigo-400" /> Student Dashboard</Link>
+                    </li>
+                    <li>
+                      <Link to="/referrals"><Share2 className="w-4 h-4 text-emerald-400" /> My Referral Hub</Link>
+                    </li>
+                  </>
                 )}
                 <li>
                   <button onClick={handleLogout} className="text-red-400 hover:text-red-300">
