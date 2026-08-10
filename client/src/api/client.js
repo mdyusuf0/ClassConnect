@@ -245,4 +245,20 @@ export const moderateReviewApi = async (reviewId, processData) => {
   return res.data;
 };
 
+// Analytics Dashboard & System Notifications API
+export const getAdminAnalyticsApi = async () => {
+  const res = await api.get('/admin/analytics');
+  return res.data;
+};
+
+export const getAdminNotificationsApi = async () => {
+  const res = await api.get('/admin/notifications');
+  return res.data;
+};
+
+export const markNotificationReadApi = async (id) => {
+  const res = await api.put(`/admin/notifications/${id}/read`);
+  return res.data;
+};
+
 export default api;
