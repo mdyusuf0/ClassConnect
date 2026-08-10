@@ -1,5 +1,5 @@
 {
-  "name": "classconnect-api",
+  "name": "classconnect-server",
   "version": "1.0.0",
   "description": "Backend API for ClassConnect Course Selling Platform",
   "main": "dist/server.js",
