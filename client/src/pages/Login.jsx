@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, ArrowRight, ArrowLeft, Lock, Mail, Sparkles, Award, Zap, CheckCircle2, KeyRound, X } from 'lucide-react';
 import store from '../data/mockStore.js';
 
-const Login = ({ onLogin }) => {
+const Login = ({ currentUser, onLogin }) => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -15,6 +15,29 @@ const Login = ({ onLogin }) => {
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [resetSuccess, setResetSuccess] = useState(false);
+
+  // Auto-redirect if logged in or valid token/cookie present
+  useEffect(() => {
+    function getCookie(name) {
+      const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+      return match ? decodeURIComponent(match[2]) : null;
+    }
+    const tokenCookie = getCookie('classconnect_token') || getCookie('token') || getCookie('session');
+    const userCookie = getCookie('classconnect_user') || getCookie('user');
+    const localUser = localStorage.getItem('classconnect_user');
+    const localToken = localStorage.getItem('classconnect_token');
+
+    if (currentUser || tokenCookie || userCookie || localUser || localToken) {
+      let role = currentUser?.role;
+      if (!role && (userCookie || localUser)) {
+        try {
+          const parsed = JSON.parse(userCookie || localUser);
+          role = parsed?.role;
+        } catch (e) {}
+      }
+      navigate(role === 'admin' ? '/admin' : '/dashboard', { replace: true });
+    }
+  }, [currentUser, navigate]);
 
   // Check Remember Me prefill on load
   useEffect(() => {

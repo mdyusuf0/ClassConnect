@@ -3,10 +3,33 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Eye, EyeOff, ArrowRight, ArrowLeft, CheckCircle2, ShieldCheck, Info, ChevronDown, Sparkles, Award, Zap } from 'lucide-react';
 import store, { indianStates } from '../data/mockStore.js';
 
-const Register = ({ onLogin }) => {
+const Register = ({ currentUser, onLogin }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const preSelectedPackageId = searchParams.get('package');
+
+  // Auto-redirect if logged in or valid token/cookie present
+  useEffect(() => {
+    function getCookie(name) {
+      const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+      return match ? decodeURIComponent(match[2]) : null;
+    }
+    const tokenCookie = getCookie('classconnect_token') || getCookie('token') || getCookie('session');
+    const userCookie = getCookie('classconnect_user') || getCookie('user');
+    const localUser = localStorage.getItem('classconnect_user');
+    const localToken = localStorage.getItem('classconnect_token');
+
+    if (currentUser || tokenCookie || userCookie || localUser || localToken) {
+      let role = currentUser?.role;
+      if (!role && (userCookie || localUser)) {
+        try {
+          const parsed = JSON.parse(userCookie || localUser);
+          role = parsed?.role;
+        } catch (e) {}
+      }
+      navigate(role === 'admin' ? '/admin' : '/dashboard', { replace: true });
+    }
+  }, [currentUser, navigate]);
 
   const [packages, setPackages] = useState([]);
   
