@@ -1,345 +1,189 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { User, Mail, Lock, CheckCircle2, Shield, CreditCard, ArrowRight, ArrowLeft, BookOpen, Sparkles } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, CheckCircle } from 'lucide-react';
+import store, { indianStates } from '../data/mockStore.js';
 
-const COURSES = [
-  {
-    id: 'course_web_dev_101',
-    title: 'Full Stack Web Development Bootcamp',
-    category: 'Web Development',
-    price: 99,
-    description: 'Master React, Node.js, Express, MongoDB, and modern web deployment.',
-  },
-  {
-    id: 'course_ai_ml_201',
-    title: 'AI & Machine Learning Masterclass',
-    category: 'Artificial Intelligence',
-    price: 149,
-    description: 'Build real-world LLM apps, neural networks, and computer vision pipelines.',
-  },
-  {
-    id: 'course_data_sci_301',
-    title: 'Data Science & Analytics Pro',
-    category: 'Data Science',
-    price: 129,
-    description: 'Statistical analysis, Python Pandas, visualization, and big data processing.',
-  },
-];
-
-export default function Register() {
-  const [step, setStep] = useState(1);
+const Register = ({ onLogin }) => {
+  const navigate = useNavigate();
+  const [packages, setPackages] = useState([]);
+  
   const [formData, setFormData] = useState({
+    planId: '',
+    referralCode: '',
     name: '',
+    state: '',
+    mobile: '',
     email: '',
     password: '',
-    role: 'student',
-    courseId: 'course_web_dev_101',
-    paymentMethod: 'stripe_card',
+    agreeTerms: false
   });
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [referralValid, setReferralValid] = useState(false);
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
 
-  const { register } = useAuth();
-  const navigate = useNavigate();
+  useEffect(() => {
+    // get packages
+    setPackages(store.getPackages());
+  }, []);
 
-  const handleInputChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
 
-  const handleNextStep = (e) => {
-    e.preventDefault();
-    if (step === 1) {
-      if (!formData.name || !formData.email || !formData.password) {
-        setError('Please fill in all required account fields.');
-        return;
-      }
-      if (formData.password.length < 6) {
-        setError('Password must be at least 6 characters.');
-        return;
+    if (name === 'planId') {
+      const plan = packages.find(p => p.id === value);
+      setSelectedPlan(plan || null);
+    }
+
+    if (name === 'referralCode') {
+      if (value.length >= 5) {
+        setReferralValid(true);
+      } else {
+        setReferralValid(false);
       }
     }
-    setError('');
-    setStep((prev) => prev + 1);
   };
 
-  const handlePrevStep = () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setError('');
-    setStep((prev) => prev - 1);
-  };
-
-  const handleSubmit = async () => {
-    setError('');
-    setLoading(true);
+    if (!formData.agreeTerms) {
+      setError('You must agree to the terms and conditions.');
+      return;
+    }
+    
     try {
-      const res = await register(formData);
-      if (res.success) {
-        if (res.user.role === 'admin') {
-          navigate('/admin', { replace: true });
-        } else {
-          navigate('/dashboard', { replace: true });
-        }
+      const user = await store.registerUser(formData);
+      if (user) {
+        if (onLogin) onLogin(user);
+        navigate('/dashboard');
+      } else {
+        setError('Registration failed. Please try again.');
       }
     } catch (err) {
-      setError(err.response?.data?.error || err.message || 'Registration failed.');
-    } finally {
-      setLoading(false);
+      setError(err.message || 'An error occurred during registration.');
     }
   };
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center p-4">
-      <div className="card glass-panel w-full max-w-2xl p-8 rounded-2xl shadow-2xl border border-white/10 relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
+    <div className="auth-layout">
+      {/* minimal header */}
+      <header className="auth-header">
+        <div className="logo">ClassConnect</div>
+        <Link to="/login" className="auth-header-link">Sign In</Link>
+      </header>
 
-        {/* Multi-Step Header */}
-        <div className="mb-8">
-          <div className="text-center mb-6">
-            <div className="inline-flex p-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 mb-2 text-indigo-400">
-              <BookOpen className="w-6 h-6" />
-            </div>
-            <h2 className="text-2xl font-black text-white">Student Registration & Enrollment</h2>
-            <p className="text-xs text-slate-400 mt-1">Create your account and enroll in your first course in 3 simple steps</p>
+      <div className="auth-container">
+        <div className="auth-card">
+          <div className="auth-card-header">
+            <h1 className="auth-title">Registration</h1>
+            <p className="auth-subtitle">Already have an account? <Link to="/login">Login</Link></p>
           </div>
 
-          <ul className="steps steps-horizontal w-full text-xs font-semibold">
-            <li className={`step ${step >= 1 ? 'step-primary' : ''}`}>Account Details</li>
-            <li className={`step ${step >= 2 ? 'step-primary' : ''}`}>Course Selection</li>
-            <li className={`step ${step >= 3 ? 'step-primary' : ''}`}>Checkout Stub</li>
-          </ul>
-        </div>
+          {error && <div className="auth-error">{error}</div>}
 
-        {error && (
-          <div className="alert alert-error bg-red-950/40 border border-red-500/30 text-red-300 rounded-xl mb-6 text-sm">
-            <span>{error}</span>
-          </div>
-        )}
-
-        {/* STEP 1: Account Information */}
-        {step === 1 && (
-          <form onSubmit={handleNextStep} className="space-y-4">
-            <div className="form-control">
-              <label className="label text-xs font-semibold text-slate-300">Full Name</label>
-              <div className="relative">
-                <User className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
-                  placeholder="John Doe"
-                  className="input input-bordered w-full pl-10 bg-slate-900/60 text-white placeholder-slate-500 border-white/10 focus:border-indigo-500"
-                />
-              </div>
-            </div>
-
-            <div className="form-control">
-              <label className="label text-xs font-semibold text-slate-300">Email Address</label>
-              <div className="relative">
-                <Mail className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
-                <input
-                  type="email"
-                  required
-                  value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  placeholder="student@example.com"
-                  className="input input-bordered w-full pl-10 bg-slate-900/60 text-white placeholder-slate-500 border-white/10 focus:border-indigo-500"
-                />
-              </div>
-            </div>
-
-            <div className="form-control">
-              <label className="label text-xs font-semibold text-slate-300">Password</label>
-              <div className="relative">
-                <Lock className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
-                <input
-                  type="password"
-                  required
-                  minLength={6}
-                  value={formData.password}
-                  onChange={(e) => handleInputChange('password', e.target.value)}
-                  placeholder="•••••••• (min 6 chars)"
-                  className="input input-bordered w-full pl-10 bg-slate-900/60 text-white placeholder-slate-500 border-white/10 focus:border-indigo-500"
-                />
-              </div>
-            </div>
-
-            <div className="form-control pt-2">
-              <label className="label text-xs font-semibold text-slate-300">Account Type</label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => handleInputChange('role', 'student')}
-                  className={`p-3 rounded-xl border text-left flex items-center gap-3 transition-all ${
-                    formData.role === 'student'
-                      ? 'bg-indigo-600/20 border-indigo-500 text-white'
-                      : 'bg-slate-900/40 border-white/10 text-slate-400'
-                  }`}
-                >
-                  <User className="w-5 h-5 text-indigo-400" />
-                  <div>
-                    <div className="font-bold text-sm">Student</div>
-                    <div className="text-[11px] opacity-70">Enroll & watch courses</div>
+          <form className="auth-form" onSubmit={handleSubmit}>
+            <div className="form-grid">
+              <div className="form-group">
+                <label className="form-label">Choose Plan</label>
+                <select className="form-select" name="planId" value={formData.planId} onChange={handleChange} required>
+                  <option value="">Select a plan</option>
+                  {packages.map(pkg => (
+                    <option key={pkg.id} value={pkg.id}>{pkg.name}</option>
+                  ))}
+                </select>
+                {selectedPlan && (
+                  <div className="plan-price-preview">
+                    <span className="original-price">₹{selectedPlan.originalPrice || (selectedPlan.price * 1.5)}</span>
+                    <span className="current-price">₹{selectedPlan.price}</span>
                   </div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleInputChange('role', 'admin')}
-                  className={`p-3 rounded-xl border text-left flex items-center gap-3 transition-all ${
-                    formData.role === 'admin'
-                      ? 'bg-purple-600/20 border-purple-500 text-white'
-                      : 'bg-slate-900/40 border-white/10 text-slate-400'
-                  }`}
-                >
-                  <Shield className="w-5 h-5 text-purple-400" />
-                  <div>
-                    <div className="font-bold text-sm">Platform Admin</div>
-                    <div className="text-[11px] opacity-70">Manage CMS & users</div>
-                  </div>
-                </button>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Referral ID</label>
+                <div className="input-with-icon">
+                  <input type="text" className="form-input" name="referralCode" value={formData.referralCode} onChange={handleChange} placeholder="Optional" />
+                  {referralValid && <CheckCircle className="success-icon" size={18} />}
+                </div>
+                {referralValid && <span className="success-text">Referral code applied!</span>}
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Your Name</label>
+                <input type="text" className="form-input" name="name" value={formData.name} onChange={handleChange} required />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">State</label>
+                <select className="form-select" name="state" value={formData.state} onChange={handleChange} required>
+                  <option value="">Select state</option>
+                  {indianStates && indianStates.map(state => (
+                    <option key={state} value={state}>{state}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Mobile Number</label>
+                <input type="tel" className="form-input" name="mobile" value={formData.mobile} onChange={handleChange} required />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Email</label>
+                <input type="email" className="form-input" name="email" value={formData.email} onChange={handleChange} required />
+              </div>
+
+              <div className="form-group full-width">
+                <label className="form-label">Password</label>
+                <div className="password-input-wrapper">
+                  <input 
+                    type={showPassword ? 'text' : 'password'} 
+                    className="form-input" 
+                    name="password" 
+                    value={formData.password} 
+                    onChange={handleChange} 
+                    required 
+                  />
+                  <button type="button" className="toggle-password" onClick={() => setShowPassword(!showPassword)}>
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
             </div>
 
-            <button
-              type="submit"
-              className="btn bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white border-0 w-full mt-6 shadow-lg shadow-indigo-500/25"
-            >
-              Continue to Course Selection <ArrowRight className="w-4 h-4" />
+            <div className="form-group checkbox-group full-width">
+              <label className="checkbox-label">
+                <input type="checkbox" name="agreeTerms" checked={formData.agreeTerms} onChange={handleChange} required />
+                <span>I agree to the User Agreement and Terms & Conditions</span>
+              </label>
+            </div>
+
+            {selectedPlan && (
+              <div className="price-summary">
+                <p>Total Amount:</p>
+                <div className="price-amounts">
+                  <span className="summary-original-price">₹{selectedPlan.originalPrice || (selectedPlan.price * 1.5)}</span>
+                  <span className="summary-current-price">₹{selectedPlan.price}</span>
+                </div>
+              </div>
+            )}
+
+            <button type="submit" className="auth-submit-btn">
+              Register <ArrowRight size={20} />
             </button>
           </form>
-        )}
-
-        {/* STEP 2: Course Selection */}
-        {step === 2 && (
-          <div className="space-y-4">
-            <label className="text-xs font-semibold text-slate-300 block mb-2">Select Your Primary Course</label>
-            <div className="space-y-3">
-              {COURSES.map((course) => {
-                const isSelected = formData.courseId === course.id;
-                return (
-                  <div
-                    key={course.id}
-                    onClick={() => handleInputChange('courseId', course.id)}
-                    className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
-                      isSelected
-                        ? 'bg-indigo-950/50 border-indigo-500 text-white shadow-lg shadow-indigo-500/10'
-                        : 'bg-slate-900/40 border-white/10 text-slate-300 hover:border-white/20'
-                    }`}
-                  >
-                    <div className="space-y-1 max-w-md">
-                      <span className="badge badge-sm badge-outline text-indigo-400 border-indigo-500/40">{course.category}</span>
-                      <h4 className="font-bold text-sm text-white">{course.title}</h4>
-                      <p className="text-xs text-slate-400">{course.description}</p>
-                    </div>
-                    <div className="text-right pl-4">
-                      <div className="text-xl font-black text-indigo-400">${course.price}</div>
-                      {isSelected && <CheckCircle2 className="w-5 h-5 text-indigo-400 ml-auto mt-1" />}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="flex gap-3 pt-4">
-              <button
-                type="button"
-                onClick={handlePrevStep}
-                className="btn btn-outline border-white/10 text-slate-300 hover:bg-white/5"
-              >
-                <ArrowLeft className="w-4 h-4" /> Back
-              </button>
-              <button
-                type="button"
-                onClick={handleNextStep}
-                className="btn bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 flex-1 shadow-lg shadow-indigo-500/25"
-              >
-                Proceed to Payment Placeholder <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 3: Payment Method Placeholder */}
-        {step === 3 && (
-          <div className="space-y-6">
-            <div className="p-4 rounded-xl bg-slate-900/60 border border-white/10 text-xs space-y-2">
-              <div className="flex justify-between font-bold text-white text-sm pb-2 border-b border-white/10">
-                <span>Selected Course</span>
-                <span className="text-indigo-400 font-extrabold">
-                  ${COURSES.find((c) => c.id === formData.courseId)?.price}
-                </span>
-              </div>
-              <p className="text-slate-300">{COURSES.find((c) => c.id === formData.courseId)?.title}</p>
-              <p className="text-slate-500">Student: {formData.name} ({formData.email})</p>
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-3">Payment Gateway (Stub preview for Phase 4)</label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => handleInputChange('paymentMethod', 'stripe_card')}
-                  className={`p-3 rounded-xl border flex items-center justify-center gap-2 text-sm font-semibold transition-all ${
-                    formData.paymentMethod === 'stripe_card'
-                      ? 'bg-indigo-600/20 border-indigo-500 text-white'
-                      : 'bg-slate-900/40 border-white/10 text-slate-400'
-                  }`}
-                >
-                  <CreditCard className="w-4 h-4 text-indigo-400" /> Stripe Payment
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleInputChange('paymentMethod', 'razorpay_card')}
-                  className={`p-3 rounded-xl border flex items-center justify-center gap-2 text-sm font-semibold transition-all ${
-                    formData.paymentMethod === 'razorpay_card'
-                      ? 'bg-purple-600/20 border-purple-500 text-white'
-                      : 'bg-slate-900/40 border-white/10 text-slate-400'
-                  }`}
-                >
-                  <CreditCard className="w-4 h-4 text-purple-400" /> Razorpay
-                </button>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-xs text-indigo-300 flex items-center gap-3">
-              <Sparkles className="w-5 h-5 text-indigo-400 shrink-0" />
-              <span>Full live checkout integration will be connected in Phase 4. Registering now instantly completes initial enrollment.</span>
-            </div>
-
-            <div className="flex gap-3 pt-2">
-              <button
-                type="button"
-                onClick={handlePrevStep}
-                disabled={loading}
-                className="btn btn-outline border-white/10 text-slate-300 hover:bg-white/5"
-              >
-                <ArrowLeft className="w-4 h-4" /> Back
-              </button>
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={loading}
-                className="btn bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white border-0 flex-1 shadow-lg shadow-emerald-500/25"
-              >
-                {loading ? (
-                  <span className="loading loading-spinner loading-sm"></span>
-                ) : (
-                  <span className="flex items-center justify-center gap-2">
-                    Complete Registration & Enroll <CheckCircle2 className="w-4 h-4" />
-                  </span>
-                )}
-              </button>
-            </div>
-          </div>
-        )}
-
-        <div className="text-center mt-6 text-xs text-slate-400">
-          Already registered?{' '}
-          <Link to="/login" className="text-indigo-400 font-semibold hover:underline">
-            Log in here
-          </Link>
         </div>
       </div>
+      <div className="bg-dots top-left"></div>
+      <div className="bg-dots bottom-right"></div>
     </div>
   );
-}
+};
+
+export default Register;

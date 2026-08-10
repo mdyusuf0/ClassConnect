@@ -3,14 +3,150 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+  }
+
   body {
-    @apply antialiased text-slate-100 bg-slate-950;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: #F5F9FA;
+    color: #1B1B1B;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Hanken Grotesk', sans-serif;
   }
 }
 
-.glass-panel {
-  background: rgba(15, 23, 42, 0.65);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+@layer components {
+  /* Premium Glassmorphic Navbar */
+  .navbar-glass {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  /* Reference Course Card Components */
+  .premium-course-card {
+    @apply bg-white rounded-[24px] border border-gray-100 overflow-hidden flex flex-col transition-all duration-300 shadow-md relative hover:-translate-y-1.5 hover:shadow-2xl hover:border-amber-400/40;
+  }
+
+  .card-media-wrapper {
+    @apply relative h-[195px] w-full overflow-hidden bg-gray-950;
+  }
+
+  .card-media-img {
+    @apply w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105;
+  }
+
+  .favorite-glass-btn {
+    @apply w-9 h-9 rounded-full bg-white/30 backdrop-blur-md border border-white/40 flex items-center justify-center text-white transition-all hover:bg-white hover:text-amber-600 shadow-md active:scale-90;
+  }
+
+  .card-body-content {
+    @apply p-5 flex flex-col flex-grow bg-white;
+  }
+
+  .card-course-title {
+    @apply font-heading font-extrabold text-base md:text-lg text-gray-900 leading-snug line-clamp-2 mb-2 group-hover:text-primary-container transition-colors;
+  }
+
+  .card-course-desc {
+    @apply text-xs text-gray-500 leading-relaxed line-clamp-2 mb-4 font-normal;
+  }
+
+  .card-divider {
+    @apply w-full h-[1px] bg-gray-100 mt-auto mb-4;
+  }
+
+  .card-footer-row {
+    @apply flex items-center justify-between gap-3 pt-1;
+  }
+
+  .card-action-btn {
+    @apply bg-[#FFB800] hover:bg-[#FF9900] text-gray-950 font-heading font-extrabold text-xs tracking-wider uppercase px-5 py-2.5 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg inline-flex items-center justify-center active:scale-95;
+  }
+
+  .card-price-block {
+    @apply text-right flex flex-col items-end justify-center;
+  }
+
+  .card-price-strike {
+    @apply text-[11px] font-semibold text-gray-400 line-through decoration-red-500 decoration-2 leading-none mb-1;
+  }
+
+  .card-price-current {
+    @apply font-heading font-extrabold text-base md:text-lg text-gray-900 leading-none;
+  }
+
+  /* ---------------------------------------------------- */
+  /* Aceternity Style Package Cards & Background Glow     */
+  /* ---------------------------------------------------- */
+
+  .package-ambient-glow {
+    position: relative;
+  }
+
+  .package-ambient-glow::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 95%;
+    height: 80%;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, rgba(236, 72, 153, 0.12) 40%, rgba(245, 158, 11, 0.1) 70%, transparent 100%);
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Aceternity Card Base - Same Size Initially, Enlarges On Hover */
+  .aceternity-package-card {
+    @apply relative bg-white/95 backdrop-blur-xl rounded-[32px] border border-gray-200/80 p-6 flex flex-col transition-all duration-300 shadow-md hover:shadow-2xl hover:scale-105 hover:-translate-y-3 z-10 hover:z-30;
+  }
+
+  /* Aceternity Animated Border Edge Glow on Hover */
+  .aceternity-package-card::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 34px;
+    padding: 2px;
+    background: linear-gradient(135deg, #a855f7, #ec4899, #f59e0b, #3b82f6);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    pointer-events: none;
+  }
+
+  .aceternity-package-card:hover::after {
+    opacity: 1;
+  }
+
+  /* Edge Glow Cards */
+  .card-edge-glow {
+    @apply bg-white rounded-xl border border-gray-200 transition-all duration-300 hover:shadow-[0_0_25px_rgba(0,43,112,0.18)] hover:border-transparent;
+  }
+
+  /* Pre-title Label */
+  .pre-title {
+    @apply inline-block font-sans text-xs font-semibold text-secondary-container uppercase tracking-widest mb-2 relative;
+  }
+
+  .pre-title::after {
+    content: '';
+    @apply block w-10 h-0.5 bg-secondary-container mx-auto mt-1.5 rounded-full;
+  }
+}
+
+@layer utilities {
+  .dot-pattern {
+    background-image: radial-gradient(circle at 2px 2px, #e5e2e1 1px, transparent 0);
+    background-size: 24px 24px;
+  }
 }
