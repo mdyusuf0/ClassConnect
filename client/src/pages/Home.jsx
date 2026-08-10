@@ -165,12 +165,6 @@ export default function Home({ currentLang = 'EN' }) {
               {activeSlideData.subtitle}
             </p>
 
-            {/* Compact One-line Unique Highlight Box */}
-            <div className="bg-black/50 backdrop-blur-md border border-amber-400/40 rounded-xl p-3 mb-6 flex items-center gap-2 text-xs font-semibold text-amber-300 shadow-md max-w-md">
-              <Zap size={16} className="text-amber-400 flex-shrink-0 animate-bounce" />
-              <span>{activeSlideData.unique}</span>
-            </div>
-
             {/* Compact CTA Buttons */}
             <div className="flex flex-wrap items-center gap-3">
               <Link to="/courses" className="bg-[#3B82F6] hover:bg-[#2563EB] text-white font-heading font-bold text-xs tracking-wider uppercase px-6 py-3 rounded-full transition-all shadow-md active:scale-95 inline-flex items-center gap-1.5">
