@@ -1,8 +1,6 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import { ReferralSetting, ReferralEarning, PayoutRequest } from './referral.model.js';
-import { Course } from '../courses/course.model.js';
-import { User } from '../auth/user.model.js';
 import { AuthenticatedRequest } from '../../middleware/auth.middleware.js';
 
 const inMemorySettings: Map<string, any> = new Map();

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import { Payment, IPayment, PaymentGateway } from './payment.model.js';
+import { Payment, PaymentGateway } from './payment.model.js';
 import { Course } from '../courses/course.model.js';
 import { User } from '../auth/user.model.js';
 import { AuthenticatedRequest } from '../../middleware/auth.middleware.js';

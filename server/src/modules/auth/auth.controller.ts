@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import mongoose from 'mongoose';
-import { User, IUser, UserRole } from './user.model.js';
+import { User, UserRole } from './user.model.js';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../../utils/jwt.js';
 import { AuthenticatedRequest } from '../../middleware/auth.middleware.js';
 

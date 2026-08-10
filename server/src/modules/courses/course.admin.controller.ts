@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import { Course, ICourse, IUnit, ILesson } from './course.model.js';
+import { Course } from './course.model.js';
+import type { IUnit, ILesson } from './course.model.js';
 import { BunnyService } from '../../services/bunny.service.js';
 
 // In-memory store fallback for isolated unit tests / environments without live Mongo
@@ -14,8 +15,8 @@ const slugify = (text: string): string => {
     .toLowerCase()
     .trim()
     .replace(/\s+/g, '-')
-    .replace(/[^\w\-]+/g, '')
-    .replace(/\-\-+/g, '-');
+    .replace(/[^\w-]+/g, '')
+    .replace(/--+/g, '-');
 };
 
 export const createCourse = async (req: Request, res: Response) => {

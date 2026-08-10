@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import { Course, ICourse, IUnit, ILesson } from './course.model.js';
+import { Course } from './course.model.js';
 import { AuthenticatedRequest } from '../../middleware/auth.middleware.js';
 import { BunnyService } from '../../services/bunny.service.js';
 import { User } from '../auth/user.model.js';

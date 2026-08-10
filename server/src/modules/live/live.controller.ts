@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import { LiveSession, ChatMessage, ILiveSession, LiveStatus } from './live.model.js';
-import { Course, IUnit, ILesson } from '../courses/course.model.js';
+import { LiveSession, ChatMessage, LiveStatus } from './live.model.js';
+import { Course } from '../courses/course.model.js';
+import type { IUnit } from '../courses/course.model.js';
 import { AuthenticatedRequest } from '../../middleware/auth.middleware.js';
 import { BunnyService } from '../../services/bunny.service.js';
 

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import { Review, IReview, ReviewStatus } from './review.model.js';
+import { Review, ReviewStatus } from './review.model.js';
 import { User } from '../auth/user.model.js';
 import { AuthenticatedRequest } from '../../middleware/auth.middleware.js';
 

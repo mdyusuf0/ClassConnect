@@ -2,9 +2,7 @@ import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import { Notification } from './notification.model.js';
 import { Payment } from '../payments/payment.model.js';
-import { Course } from '../courses/course.model.js';
 import { User } from '../auth/user.model.js';
-import { UserProgress } from '../progress/progress.model.js';
 import { NotificationService } from '../../services/notification.service.js';
 
 const isDbConnected = (): boolean => mongoose.connection.readyState === 1;
@@ -16,7 +14,7 @@ export const getAdminAnalyticsDashboard = async (_req: Request, res: Response) =
     let razorpayRevenue = 33100;
     let totalEnrollments = 1420;
     let activeStudents = 1180;
-    let averageCompletionRate = 84.5;
+    const averageCompletionRate = 84.5;
 
     if (isDbConnected()) {
       try {

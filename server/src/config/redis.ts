@@ -20,7 +20,7 @@ export const connectRedis = async (): Promise<boolean> => {
       retryStrategy: () => null,
     });
 
-    redisClient.on('error', (err) => {
+    redisClient.on('error', () => {
       // Handled silently in fallback
     });
 
@@ -30,7 +30,11 @@ export const connectRedis = async (): Promise<boolean> => {
   } catch (error) {
     Logger.warn('[Redis] Redis connection failed or offline. Operating in fallback mode:', (error as Error).message);
     if (redisClient) {
-      try { redisClient.disconnect(); } catch (e) {}
+      try { 
+        redisClient.disconnect(); 
+      } catch (e) {
+        // Disconnect failure ignored
+      }
       redisClient = null;
     }
     return false;
