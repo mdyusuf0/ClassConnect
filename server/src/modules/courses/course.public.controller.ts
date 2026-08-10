@@ -1,6 +1,9 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import { Course, ICourse, IUnit, ILesson } from './course.model.js';
+import { AuthenticatedRequest } from '../../middleware/auth.middleware.js';
+import { BunnyService } from '../../services/bunny.service.js';
+import { User } from '../auth/user.model.js';
 
 const isDbConnected = (): boolean => mongoose.connection.readyState === 1;
 
@@ -37,7 +40,6 @@ export const getPublicCourses = async (req: Request, res: Response) => {
       }
     }
 
-    // If database query yielded nothing or DB is offline, provide mock fallback courses
     if (courses.length === 0) {
       courses = [
         {
@@ -114,22 +116,8 @@ export const getPublicCourses = async (req: Request, res: Response) => {
             },
           ],
         },
-        {
-          _id: 'course_data_sci_301',
-          id: 'course_data_sci_301',
-          title: 'Data Science & Analytics Pro',
-          slug: 'data-science-analytics-pro',
-          description: 'Statistical analysis, Python Pandas, visualization, and big data processing.',
-          thumbnail: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&auto=format&fit=crop&q=80',
-          price: 129,
-          category: 'Data Science',
-          level: 'Advanced',
-          isPublished: true,
-          units: [],
-        },
       ];
 
-      // In-memory JavaScript search and filter
       if (search) {
         const s = String(search).toLowerCase();
         courses = courses.filter((c) => c.title.toLowerCase().includes(s) || c.description.toLowerCase().includes(s));
@@ -174,7 +162,6 @@ export const getPublicCourseDetail = async (req: Request, res: Response) => {
     }
 
     if (!course) {
-      // Fallback mock check
       const mockCourses = [
         {
           _id: 'course_web_dev_101',
@@ -226,12 +213,11 @@ export const getPublicCourseDetail = async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, error: 'Course not found' });
     }
 
-    // Sanitize non-preview lesson video URLs for unauthenticated/un-enrolled visitors
     const sanitizedCourse = JSON.parse(JSON.stringify(course));
     sanitizedCourse.units?.forEach((unit: any) => {
       unit.lessons?.forEach((lesson: any) => {
         if (!lesson.isFreePreview) {
-          lesson.videoUrl = ''; // Hide raw video URL for non-free preview lessons
+          lesson.videoUrl = '';
         }
       });
     });
@@ -239,6 +225,128 @@ export const getPublicCourseDetail = async (req: Request, res: Response) => {
     return res.status(200).json({
       success: true,
       course: sanitizedCourse,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: (error as Error).message });
+  }
+};
+
+/**
+ * Anti-Piracy Stream Authorization Endpoint:
+ * Generates short-lived, signed streaming URLs for authorized students and handles free preview access.
+ */
+export const getSignedLessonStream = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { courseId, lessonId } = req.params;
+
+    let course: any = null;
+    if (isDbConnected()) {
+      try {
+        course = await Course.findById(courseId);
+      } catch (e) {
+        // fallback
+      }
+    }
+
+    if (!course) {
+      course = {
+        _id: courseId,
+        id: courseId,
+        units: [
+          {
+            id: 'unit_web_1',
+            lessons: [
+              {
+                id: 'lesson_web_1_1',
+                title: 'Lesson 1.1: Free Architecture Overview',
+                videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+                isFreePreview: true,
+              },
+              {
+                id: 'lesson_web_1_2',
+                title: 'Lesson 1.2: Paid ES6+ Video',
+                videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+                isFreePreview: false,
+              },
+            ],
+          },
+        ],
+      };
+    }
+
+    // Locate target lesson across units
+    let targetLesson: any = null;
+    course.units?.forEach((unit: any) => {
+      unit.lessons?.forEach((lesson: any) => {
+        if (lesson.id === lessonId || lesson._id === lessonId) {
+          targetLesson = lesson;
+        }
+      });
+    });
+
+    if (!targetLesson) {
+      targetLesson = {
+        id: lessonId,
+        title: 'Target Lesson',
+        videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+        isFreePreview: false,
+      };
+    }
+
+    // Free Preview Lessons: Accessible to anyone
+    if (targetLesson.isFreePreview) {
+      const { signedUrl, expiresAt } = BunnyService.generateSignedStreamingUrl(targetLesson.videoUrl);
+      return res.status(200).json({
+        success: true,
+        isFreePreview: true,
+        streamUrl: signedUrl,
+        expiresAt,
+        watermark: null,
+      });
+    }
+
+    // Paid Lessons: Requires active user authentication AND enrollment / admin authorization
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: 'Authentication required to view paid course content' });
+    }
+
+    const userId = req.user.userId;
+    const isOwnerOrAdmin = req.user.role === 'admin';
+
+    let isEnrolled = isOwnerOrAdmin;
+    if (!isEnrolled && isDbConnected()) {
+      try {
+        const dbUser = await User.findById(userId);
+        if (dbUser && dbUser.enrolledCourses.includes(courseId)) {
+          isEnrolled = true;
+        }
+      } catch (e) {
+        // fallback
+      }
+    } else if (!isEnrolled) {
+      // In-memory / test authorization fallback
+      isEnrolled = true;
+    }
+
+    if (!isEnrolled) {
+      return res.status(403).json({
+        success: false,
+        error: 'Enrolled student authorization required to access paid content. Please complete course enrollment.',
+      });
+    }
+
+    // Generate short-lived Bunny signed URL with anti-piracy token
+    const { signedUrl, expiresAt } = BunnyService.generateSignedStreamingUrl(targetLesson.videoUrl, 7200);
+
+    return res.status(200).json({
+      success: true,
+      isFreePreview: false,
+      streamUrl: signedUrl,
+      expiresAt,
+      watermark: {
+        userEmail: req.user.email,
+        userId: req.user.userId,
+      },
     });
   } catch (error) {
     return res.status(500).json({ success: false, error: (error as Error).message });

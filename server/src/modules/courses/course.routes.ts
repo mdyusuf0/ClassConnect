@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getPublicCourses, getPublicCourseDetail } from './course.public.controller.js';
+import { getPublicCourses, getPublicCourseDetail, getSignedLessonStream } from './course.public.controller.js';
 import {
   createCourse,
   getAdminCourses,
@@ -20,6 +20,9 @@ const router = Router();
 // Public Routes
 router.get('/courses', getPublicCourses);
 router.get('/courses/:slugOrId', getPublicCourseDetail);
+
+// Anti-Piracy Short-Lived Signed Stream URL Endpoint
+router.get('/courses/:courseId/lessons/:lessonId/stream', authenticate, getSignedLessonStream);
 
 // Protected Admin CMS Routes
 router.post('/admin/courses', authenticate, authorize('admin'), createCourse);

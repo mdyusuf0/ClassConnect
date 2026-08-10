@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { env } from '../config/env.js';
 
 export interface BunnyUploadResult {
@@ -19,7 +20,6 @@ export class BunnyService {
     const cleanFileName = `${Date.now()}_${fileName.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
     const destinationPath = `${folder}/${cleanFileName}`;
 
-    // If mock environment or test, return clean mock CDN URL
     if (env.BUNNY_STORAGE_API_KEY === 'mock_bunny_api_key' || process.env.NODE_ENV === 'test') {
       const mockCdnUrl = `${env.BUNNY_CDN_URL}/${destinationPath}`;
       return {
@@ -69,5 +69,25 @@ export class BunnyService {
    */
   static getVideoStreamUrl(videoId: string): string {
     return `${env.BUNNY_CDN_URL}/embed/${videoId}`;
+  }
+
+  /**
+   * Generates a short-lived, signed streaming URL with expiration token to prevent hotlinking and pirated video sharing
+   */
+  static generateSignedStreamingUrl(rawVideoUrl: string, expiresInSeconds: number = 7200): { signedUrl: string; expiresAt: number } {
+    const expiresAt = Math.floor(Date.now() / 1000) + expiresInSeconds;
+    const tokenKey = env.BUNNY_STREAM_API_KEY || 'mock_bunny_stream_key';
+    
+    // Hash URL + Expiration with secret token key
+    const hash = crypto
+      .createHmac('sha256', tokenKey)
+      .update(`${rawVideoUrl}_${expiresAt}`)
+      .digest('hex')
+      .substring(0, 16);
+
+    const separator = rawVideoUrl.includes('?') ? '&' : '?';
+    const signedUrl = `${rawVideoUrl}${separator}token=${hash}&expires=${expiresAt}`;
+
+    return { signedUrl, expiresAt };
   }
 }

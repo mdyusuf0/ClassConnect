@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getCourseDetailApi, getCourseProgressApi, updateLessonProgressApi, downloadCertificateApi } from '../api/client';
+import { useAuth } from '../context/AuthContext';
 import {
   PlayCircle,
   Lock,
@@ -13,10 +14,12 @@ import {
   Sparkles,
   ArrowLeft,
   AlertCircle,
+  Shield,
 } from 'lucide-react';
 
 export default function CoursePlayer() {
   const { courseId } = useParams();
+  const { user } = useAuth();
 
   const [course, setCourse] = useState(null);
   const [progress, setProgress] = useState(null);
@@ -28,8 +31,29 @@ export default function CoursePlayer() {
   const [downloadingCert, setDownloadingCert] = useState(false);
   const [certUnlockedNotification, setCertUnlockedNotification] = useState(false);
 
+  // Dynamic Moving Watermark Position State (0 to 5)
+  const [watermarkPosIndex, setWatermarkPosIndex] = useState(0);
+
   const videoRef = useRef(null);
   const lastPingTimeRef = useRef(0);
+
+  // Watermark positions around the video player
+  const watermarkPositions = [
+    'top-4 left-4',
+    'top-4 right-4',
+    'bottom-14 left-4',
+    'bottom-14 right-4',
+    'top-1/2 left-6 -translate-y-1/2',
+    'top-1/2 right-6 -translate-y-1/2',
+  ];
+
+  // Rotate anti-piracy watermark position every 8 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setWatermarkPosIndex((prev) => (prev + 1) % watermarkPositions.length);
+    }, 8000);
+    return () => clearInterval(interval);
+  }, []);
 
   const fetchData = async () => {
     try {
@@ -86,7 +110,6 @@ export default function CoursePlayer() {
           if (res.progress.newlyUnlockedCertId) {
             setCertUnlockedNotification(true);
           }
-          // Refresh progress state
           const progRes = await getCourseProgressApi(course._id || course.id || courseId);
           if (progRes.success) {
             setProgress(progRes.progress);
@@ -102,16 +125,16 @@ export default function CoursePlayer() {
     if (!progress?.certificateId) return;
     setDownloadingCert(true);
     try {
-      const blob = await downloadCertificateApi(progress.certificateId);
-      const url = window.URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
+      const blobData = await downloadCertificateApi(progress.certificateId);
+      const url = window.URL.createObjectURL(new Blob([blobData], { type: 'application/pdf' }));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `ClassConnect_Certificate_${progress.certificateId}.pdf`);
+      link.setAttribute('download', `${progress.certificateId}.pdf`);
       document.body.appendChild(link);
       link.click();
       link.remove();
     } catch (err) {
-      setError('Certificate download failed: ' + err.message);
+      setError('Certificate download failed');
     } finally {
       setDownloadingCert(false);
     }
@@ -125,7 +148,7 @@ export default function CoursePlayer() {
     );
   }
 
-  const isCertUnlocked = (progress?.overallCoursePercentage || 0) >= 90;
+  const isCertUnlocked = progress?.isCertificateUnlocked;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
@@ -189,17 +212,31 @@ export default function CoursePlayer() {
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-3">
         {/* Left/Main Video Player Panel */}
         <div className="lg:col-span-2 p-6 space-y-6 bg-slate-950 border-r border-white/10">
-          <div className="aspect-video bg-black rounded-2xl overflow-hidden border border-white/10 shadow-2xl relative">
+          <div className="aspect-video bg-black rounded-2xl overflow-hidden border border-white/10 shadow-2xl relative select-none">
             {activeLesson ? (
-              <video
-                ref={videoRef}
-                key={activeLesson.id}
-                src={activeLesson.videoUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'}
-                controls
-                autoPlay
-                onTimeUpdate={handleTimeUpdate}
-                className="w-full h-full object-contain"
-              />
+              <>
+                <video
+                  ref={videoRef}
+                  key={activeLesson.id}
+                  src={activeLesson.videoUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'}
+                  controls
+                  autoPlay
+                  controlsList="nodownload"
+                  onContextmenu={(e) => e.preventDefault()}
+                  onTimeUpdate={handleTimeUpdate}
+                  className="w-full h-full object-contain"
+                />
+
+                {/* Anti-Piracy Dynamic Moving Watermark Overlay */}
+                <div
+                  className={`absolute transition-all duration-1000 pointer-events-none select-none text-[11px] font-mono font-bold tracking-widest text-white/25 bg-black/40 px-3 py-1 rounded-full border border-white/10 backdrop-blur-xs z-30 shadow-lg ${watermarkPositions[watermarkPosIndex]}`}
+                >
+                  <span className="flex items-center gap-1.5">
+                    <Shield className="w-3 h-3 text-red-400/50" />
+                    {user?.email || 'student@classconnect.app'} (ID: {user?.id || user?._id || 'CC-ST-9821'})
+                  </span>
+                </div>
+              </>
             ) : (
               <div className="w-full h-full flex items-center justify-center text-slate-500">
                 Select an unlocked lesson to start watching
@@ -213,6 +250,9 @@ export default function CoursePlayer() {
                 <span className="badge badge-primary font-bold text-xs">{activeUnit?.title}</span>
                 <span className="badge badge-outline text-slate-400 border-white/10 text-xs flex items-center gap-1">
                   <Clock className="w-3 h-3" /> {Math.round((activeLesson.duration || 600) / 60)} mins
+                </span>
+                <span className="badge badge-ghost text-[10px] text-emerald-400 border-emerald-500/30 flex items-center gap-1">
+                  <Shield className="w-3 h-3" /> Signed Token Stream
                 </span>
               </div>
               <h2 className="text-xl font-extrabold text-white">{activeLesson.title}</h2>
@@ -231,87 +271,80 @@ export default function CoursePlayer() {
           </div>
 
           <div className="space-y-4">
-            {course?.units?.sort((a, b) => a.order - b.order).map((unit, uIdx) => {
+            {course?.units?.map((unit, uIdx) => {
               const unitLockInfo = progress?.unitLockStatusMap?.[unit.id] || {
                 isUnlocked: uIdx === 0,
                 percentageWatched: 0,
               };
-
-              const isUnlocked = unitLockInfo.isUnlocked;
+              const isUnitUnlocked = unitLockInfo.isUnlocked;
 
               return (
                 <div
                   key={unit.id}
-                  className={`card glass-panel rounded-xl border transition-all ${
-                    isUnlocked
-                      ? 'border-white/10 bg-slate-900/60'
-                      : 'border-white/5 bg-slate-950/60 opacity-60'
+                  className={`card rounded-xl border transition-all ${
+                    isUnitUnlocked
+                      ? 'bg-slate-900/60 border-white/10'
+                      : 'bg-slate-950/60 border-white/5 opacity-60'
                   }`}
                 >
-                  <div className="p-4 border-b border-white/5 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-7 h-7 rounded-lg font-bold text-xs flex items-center justify-center border ${
-                          isUnlocked
-                            ? 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30'
-                            : 'bg-slate-800 text-slate-500 border-slate-700'
-                        }`}
-                      >
-                        {isUnlocked ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5 text-slate-500" />}
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-xs text-white flex items-center gap-2">
-                          {unit.title}
-                          {!isUnlocked && (
-                            <span className="badge badge-xs badge-error text-[9px]">Locked</span>
-                          )}
-                        </h4>
-                        <div className="text-[10px] text-slate-400 mt-0.5">
-                          {isUnlocked
-                            ? `${unitLockInfo.percentageWatched}% watched`
-                            : 'Watch 90% of Unit ' + uIdx + ' to unlock'}
-                        </div>
-                      </div>
+                  <div className="p-4 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <h4 className="font-bold text-xs text-white leading-snug">{unit.title}</h4>
+                      {isUnitUnlocked ? (
+                        <span className="badge badge-xs badge-success gap-1 text-[9px]">
+                          <Unlock className="w-2.5 h-2.5" /> Unlocked
+                        </span>
+                      ) : (
+                        <span className="badge badge-xs badge-error gap-1 text-[9px]">
+                          <Lock className="w-2.5 h-2.5" /> Locked
+                        </span>
+                      )}
                     </div>
-                  </div>
 
-                  {/* Lessons list inside unit */}
-                  {isUnlocked && (
-                    <div className="p-3 space-y-1.5">
-                      {unit.lessons?.sort((a, b) => a.order - b.order).map((lesson, lIdx) => {
+                    <div className="space-y-1 pt-1">
+                      <div className="flex justify-between text-[10px] text-slate-400">
+                        <span>Unit Progress</span>
+                        <span>{unitLockInfo.percentageWatched || 0}%</span>
+                      </div>
+                      <progress
+                        className="progress progress-secondary w-full bg-slate-800 h-1.5"
+                        value={unitLockInfo.percentageWatched || 0}
+                        max="100"
+                      ></progress>
+                    </div>
+
+                    {/* Lessons list */}
+                    <div className="space-y-1.5 pt-2 border-t border-white/5">
+                      {unit.lessons?.map((lesson) => {
                         const isActive = activeLesson?.id === lesson.id;
-                        const lessonProg = progress?.lessonProgress?.find((l) => l.lessonId === lesson.id);
-                        const isDone = lessonProg?.isCompleted || (lessonProg?.percentage || 0) >= 90;
-
                         return (
                           <button
                             key={lesson.id}
+                            disabled={!isUnitUnlocked}
                             onClick={() => {
                               setActiveUnit(unit);
                               setActiveLesson(lesson);
                             }}
-                            className={`w-full text-left p-2.5 rounded-lg text-xs flex items-center justify-between transition-all ${
+                            className={`w-full text-left p-2.5 rounded-lg flex items-center justify-between text-xs transition-all ${
                               isActive
-                                ? 'bg-indigo-600/30 text-white font-bold border border-indigo-500/50'
-                                : 'bg-slate-900/40 text-slate-300 hover:bg-white/5'
+                                ? 'bg-indigo-600/30 border border-indigo-500/50 text-white font-bold'
+                                : isUnitUnlocked
+                                ? 'hover:bg-white/5 text-slate-300'
+                                : 'text-slate-500 cursor-not-allowed'
                             }`}
                           >
-                            <div className="flex items-center gap-2 truncate">
-                              {isDone ? (
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                              ) : (
-                                <PlayCircle className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                              )}
-                              <span className="truncate">{lIdx + 1}. {lesson.title}</span>
-                            </div>
-                            <span className="text-[10px] text-slate-500 font-mono shrink-0 ml-2">
-                              {lessonProg ? `${lessonProg.percentage}%` : '0%'}
+                            <span className="truncate flex items-center gap-2">
+                              {isActive ? <PlayCircle className="w-4 h-4 text-indigo-400 shrink-0" /> : null}
+                              {lesson.title}
+                            </span>
+                            <span className="text-[10px] text-slate-400 shrink-0">
+                              {Math.round((lesson.duration || 600) / 60)}m
                             </span>
                           </button>
                         );
                       })}
                     </div>
-                  )}
+                  </div>
                 </div>
               );
             })}
