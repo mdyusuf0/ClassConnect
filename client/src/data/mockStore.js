@@ -4,7 +4,7 @@
 // Will be replaced by backend API calls later
 // ============================================
 
-const STORAGE_KEY = 'classconnect_data_v4';
+const STORAGE_KEY = 'classconnect_data_v5';
 
 // ---- Seed Data ----
 
@@ -638,15 +638,85 @@ function getDefaultData() {
     users: [
       {
         id: 'admin-1',
-        name: 'Admin',
-        email: 'admin@classconnect.com',
-        password: 'admin123',
+        name: 'System Admin',
+        email: 'admin@test.com',
+        password: 'Password@123',
         role: 'admin',
         referralCode: 'ADMIN001',
+      },
+      {
+        id: 'admin-2',
+        name: 'ClassConnect Admin',
+        email: 'admin@classconnect.com',
+        password: 'Password@123',
+        role: 'admin',
+        referralCode: 'ADMIN002',
+      },
+      {
+        id: 'student-1',
+        name: 'Alex Johnson',
+        email: 'student1@test.com',
+        password: 'Password@123',
+        role: 'student',
+        referralCode: 'ALEX001',
+        enrolledCourses: ['c1', 'c2'],
+      },
+      {
+        id: 'student-2',
+        name: 'Bella Smith',
+        email: 'student2@test.com',
+        password: 'Password@123',
+        role: 'student',
+        referralCode: 'BELLA002',
+        enrolledCourses: ['c1', 'c3'],
+      },
+      {
+        id: 'student-3',
+        name: 'Charlie Davis',
+        email: 'student3@test.com',
+        password: 'Password@123',
+        role: 'student',
+        referralCode: 'CHARLIE003',
+        enrolledCourses: ['c3', 'c4'],
+      },
+    ],
+    referralLog: [
+      {
+        id: 'ref-101',
+        referrerUserId: 'student-1',
+        referredUserId: 'student-2',
+        referredUserEmail: 'student2@test.com',
+        courseId: 'c1',
+        courseTitle: 'Google Ads Mastery',
+        transactionId: 'TXN-8801',
+        commissionAmount: 750,
+        status: 'credited',
+        date: new Date().toISOString(),
       }
     ],
-    referralLog: [],
-    payoutRequests: [],
+    payoutRequests: [
+      {
+        id: 'req-9901',
+        userId: 'student-1',
+        userEmail: 'student1@test.com',
+        userName: 'Alex Johnson',
+        amount: 1500,
+        paymentDetails: 'UPI: alexjohnson@okicici',
+        status: 'approved',
+        transactionId: 'TXN-BANK-0091',
+        date: new Date().toISOString(),
+      },
+      {
+        id: 'req-9902',
+        userId: 'student-2',
+        userEmail: 'student2@test.com',
+        userName: 'Bella Smith',
+        amount: 750,
+        paymentDetails: 'UPI: bellasmith@upi',
+        status: 'pending',
+        date: new Date().toISOString(),
+      }
+    ],
   };
 }
 
