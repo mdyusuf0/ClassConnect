@@ -3,10 +3,10 @@ import { Navigate, Link } from 'react-router-dom';
 import { 
   LayoutDashboard, BookOpen, Package, MessageSquare, 
   Users, DollarSign, LogOut, Plus, Edit, Trash2, 
-  Check, X, Image as ImageIcon, Video, Sparkles, Radio, PlayCircle, Upload, Layers
+  Check, X, Image as ImageIcon, Video, Sparkles, Radio, PlayCircle, Upload, Layers, ShieldCheck, Lock, ChevronRight
 } from 'lucide-react';
 import store from '../data/mockStore';
-import ImageUploader from '../components/ImageUploader';
+import MediaUploader from '../components/MediaUploader';
 import LiveStudio from '../components/LiveStudio';
 
 const AdminCMS = ({ currentUser, onLogout }) => {
@@ -16,13 +16,20 @@ const AdminCMS = ({ currentUser, onLogout }) => {
   const [users, setUsers] = useState([]);
   const [payouts, setPayouts] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
+  const [videoTestimonials, setVideoTestimonials] = useState([]);
   const [liveSessions, setLiveSessions] = useState([]);
+
+  // Edit Course Modal State
+  const [editingCourse, setEditingCourse] = useState(null);
+
+  // Edit Package Modal State
+  const [editingPackage, setEditingPackage] = useState(null);
 
   // Course Form State
   const [showCourseForm, setShowCourseForm] = useState(false);
   const [courseForm, setCourseForm] = useState({
-    title: '', category: '', description: '', thumbnail: '', 
-    duration: '', lessons: '', level: 'Beginner', featured: false, price: '2499', originalPrice: '4999'
+    title: '', category: 'Development', description: '', thumbnail: '', 
+    duration: '4 Weeks', lessons: '24', level: 'Beginner', featured: true, price: '2499', originalPrice: '4999'
   });
 
   // Unit-wise Lecture Management State
@@ -34,16 +41,16 @@ const AdminCMS = ({ currentUser, onLogout }) => {
     description: '',
     duration: '15:00',
     isFreePreview: false,
-    videoUrl: 'unit1/lesson_bunny_stream.mp4',
-    thumbnailUrl: 'lessons/lesson_thumb.jpg'
+    videoUrl: '',
+    thumbnailUrl: ''
   });
 
   // Live Session State
   const [showLiveForm, setShowLiveForm] = useState(false);
   const [activeStudioSession, setActiveStudioSession] = useState(null);
   const [liveForm, setLiveForm] = useState({
-    title: '', instructor: 'ClassConnect Mentors', courseId: '', scheduledAt: '', 
-    streamUrl: 'live/masterclass_stream.mp4', coverImage: 'live/cover_thumb.jpg', recordingUrl: ''
+    title: '', instructor: 'ClassConnect PRO Mentors', courseId: '', scheduledAt: '', 
+    streamUrl: '', coverImage: '', recordingUrl: ''
   });
 
   // Package Form State
@@ -59,11 +66,26 @@ const AdminCMS = ({ currentUser, onLogout }) => {
     name: '', role: '', content: '', rating: '5', avatar: ''
   });
 
+  // Video Testimonial Form State
+  const [showVideoForm, setShowVideoForm] = useState(false);
+  const [videoForm, setVideoForm] = useState({
+    name: '', role: '', courseTag: '', badge: '300% SALARY HIKE',
+    avatar: '', thumbnail: '', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    quote: '', rating: '5'
+  });
+
   useEffect(() => {
     if (currentUser && currentUser.role === 'admin') {
       loadData();
     }
   }, [currentUser]);
+
+  // Listen to global store update events for dynamic multi-tab sync
+  useEffect(() => {
+    const handleStoreUpdate = () => loadData();
+    window.addEventListener('classconnect_store_update', handleStoreUpdate);
+    return () => window.removeEventListener('classconnect_store_update', handleStoreUpdate);
+  }, []);
 
   const loadData = () => {
     setCourses(store.getCourses() || []);
@@ -71,58 +93,43 @@ const AdminCMS = ({ currentUser, onLogout }) => {
     setUsers(store.getUsers() || []);
     setPayouts(store.getPayoutRequests() || []);
     setLiveSessions(store.getLiveSessions ? store.getLiveSessions() : []);
-    setTestimonials(store.getTestimonials ? store.getTestimonials() : [
-      { id: 1, name: 'John Doe', role: 'Student', content: 'Great platform!', rating: 5, avatar: 'https://i.pravatar.cc/150?u=1' }
-    ]);
+    setVideoTestimonials(store.getVideoTestimonials ? store.getVideoTestimonials() : []);
+    setTestimonials(store.getTestimonials ? store.getTestimonials() : []);
   };
 
   if (!currentUser || currentUser.role !== 'admin') {
     return <Navigate to="/login" replace />;
   }
 
-  // --- Course & Cover Image & Price Handlers ---
+  // --- Course Handlers ---
   const handleCourseSubmit = (e) => {
     e.preventDefault();
-    const formattedThumbnail = store.formatBunnyStorageUrl(courseForm.thumbnail, 'courses');
     const newCourse = {
       ...courseForm,
       price: parseFloat(courseForm.price) || 2499,
       originalPrice: parseFloat(courseForm.originalPrice) || 4999,
-      thumbnail: formattedThumbnail,
-      id: Date.now().toString(),
+      id: 'c' + Date.now(),
       lessons: parseInt(courseForm.lessons) || 0
     };
     if (store.addCourse) store.addCourse(newCourse);
     loadData();
     setShowCourseForm(false);
-    setCourseForm({ title: '', category: '', description: '', thumbnail: '', duration: '', lessons: '', level: 'Beginner', featured: false, price: '2499', originalPrice: '4999' });
+    setCourseForm({ title: '', category: 'Development', description: '', thumbnail: '', duration: '4 Weeks', lessons: '24', level: 'Beginner', featured: true, price: '2499', originalPrice: '4999' });
+  };
+
+  const handleEditCourseSave = (e) => {
+    e.preventDefault();
+    if (!editingCourse) return;
+    if (store.updateCourse) {
+      store.updateCourse(editingCourse.id, editingCourse);
+    }
+    loadData();
+    setEditingCourse(null);
   };
 
   const handleDeleteCourse = (id) => {
-    if (window.confirm('Are you sure you want to delete this course?')) {
+    if (window.confirm('Security Alert: Are you sure you want to delete this course?')) {
       if (store.deleteCourse) store.deleteCourse(id);
-      loadData();
-    }
-  };
-
-  const handleEditCoursePrice = (course) => {
-    const newPrice = window.prompt(`Edit Discounted Price for "${course.title}" (₹):`, course.price || 2499);
-    if (newPrice === null) return;
-    const newOrigPrice = window.prompt(`Edit Original Strikethrough Price for "${course.title}" (₹):`, course.originalPrice || 4999);
-    if (newOrigPrice === null) return;
-    
-    const updatedPrice = parseFloat(newPrice) || course.price;
-    const updatedOrigPrice = parseFloat(newOrigPrice) || course.originalPrice;
-    
-    if (store.updateCoursePrice) store.updateCoursePrice(course.id, updatedPrice, updatedOrigPrice);
-    loadData();
-  };
-
-  const handleUpdateCoverImage = (course) => {
-    const inputUrl = window.prompt(`Enter Bunny Storage CDN filename or image URL for "${course.title}":`, course.thumbnail || 'courses/web-dev.jpg');
-    if (inputUrl) {
-      const bunnyUrl = store.formatBunnyStorageUrl(inputUrl, 'courses');
-      if (store.updateCourseCover) store.updateCourseCover(course.id, bunnyUrl);
       loadData();
     }
   };
@@ -140,7 +147,7 @@ const AdminCMS = ({ currentUser, onLogout }) => {
     );
 
     if (newLesson) {
-      alert(`Lecture "${newLesson.title}" added to Unit ${lectureForm.unitNumber} on Bunny CDN!`);
+      alert(`Lecture "${newLesson.title}" added to Unit ${lectureForm.unitNumber}!`);
       setLectureForm({
         unitNumber: '1',
         unitTitle: 'Unit 1: Core Fundamentals',
@@ -148,58 +155,50 @@ const AdminCMS = ({ currentUser, onLogout }) => {
         description: '',
         duration: '15:00',
         isFreePreview: false,
-        videoUrl: `unit${lectureForm.unitNumber}/lesson_bunny_stream.mp4`,
-        thumbnailUrl: `lessons/lesson_thumb.jpg`
+        videoUrl: '',
+        thumbnailUrl: ''
       });
       loadData();
-      const updatedCourse = store.getCourses().find(c => c.id === activeLectureCourse.id);
+      const updatedCourse = store.getCourseById(activeLectureCourse.id);
       setActiveLectureCourse(updatedCourse);
     }
   };
 
-  const handleDeleteLecture = (lessonId) => {
+  const handleDeleteLecture = (unitNumber, lessonId) => {
     if (!activeLectureCourse) return;
-    if (window.confirm('Delete this lecture?')) {
-      store.deleteLectureFromCourse(activeLectureCourse.id, lessonId);
+    if (window.confirm('Delete this lecture video unit?')) {
+      store.deleteLectureFromCourse(activeLectureCourse.id, unitNumber, lessonId);
       loadData();
-      const updatedCourse = store.getCourses().find(c => c.id === activeLectureCourse.id);
+      const updatedCourse = store.getCourseById(activeLectureCourse.id);
       setActiveLectureCourse(updatedCourse);
     }
   };
 
-  // --- Go Live & Session Handlers ---
+  // --- Live Session Handlers ---
   const handleLiveSubmit = (e) => {
     e.preventDefault();
-    const newSession = store.addLiveSession(liveForm);
-    if (newSession) {
-      alert(`Live Session "${newSession.title}" created with Bunny Stream!`);
-      setShowLiveForm(false);
-      setLiveForm({ title: '', instructor: 'ClassConnect Mentors', courseId: '', scheduledAt: '', streamUrl: 'live/masterclass_stream.mp4', coverImage: 'live/cover_thumb.jpg', recordingUrl: '' });
-      loadData();
-    }
+    const newSession = {
+      ...liveForm,
+      id: 'ls-' + Date.now(),
+      status: 'SCHEDULED',
+      createdAt: new Date().toISOString()
+    };
+    if (store.addLiveSession) store.addLiveSession(newSession);
+    loadData();
+    setShowLiveForm(false);
+    setLiveForm({ title: '', instructor: 'ClassConnect PRO Mentors', courseId: '', scheduledAt: '', streamUrl: '', coverImage: '', recordingUrl: '' });
   };
 
-  const handleToggleLiveStatus = (session) => {
-    const nextStatus = session.status === 'SCHEDULED' ? 'LIVE_NOW' : session.status === 'LIVE_NOW' ? 'COMPLETED' : 'SCHEDULED';
-    store.updateLiveSessionStatus(session.id, nextStatus);
+  const handleUpdateLiveStatus = (id, status) => {
+    if (store.updateLiveSessionStatus) store.updateLiveSessionStatus(id, status);
     loadData();
   };
 
-  const handleEditPackagePrice = (pkg) => {
-    const newPrice = window.prompt(`Edit Discounted Price for "${pkg.name}" (₹):`, pkg.price);
-    if (newPrice === null) return;
-    const newOrigPrice = window.prompt(`Edit Original Strikethrough Price for "${pkg.name}" (₹):`, pkg.originalPrice);
-    if (newOrigPrice === null) return;
-    const newCommission = window.prompt(`Edit Referral Commission for "${pkg.name}" (₹):`, pkg.commission);
-    if (newCommission === null) return;
-
-    const updatedPrice = parseFloat(newPrice) || pkg.price;
-    const updatedOrigPrice = parseFloat(newOrigPrice) || pkg.originalPrice;
-    const updatedCommission = parseFloat(newCommission) || pkg.commission;
-
-    const updatedPackages = packages.map(p => p.id === pkg.id ? { ...p, price: updatedPrice, originalPrice: updatedOrigPrice, commission: updatedCommission } : p);
-    setPackages(updatedPackages);
-    if (store.updatePackagePrice) store.updatePackagePrice(pkg.id, updatedPrice, updatedOrigPrice, updatedCommission);
+  const handleDeleteLiveSession = (id) => {
+    if (window.confirm('Delete this live masterclass session?')) {
+      if (store.deleteLiveSession) store.deleteLiveSession(id);
+      loadData();
+    }
   };
 
   // --- Package Handlers ---
@@ -207,134 +206,123 @@ const AdminCMS = ({ currentUser, onLogout }) => {
     e.preventDefault();
     const newPackage = {
       ...packageForm,
-      id: Date.now().toString(),
+      id: 'pkg-' + Date.now(),
       price: parseFloat(packageForm.price),
       originalPrice: parseFloat(packageForm.originalPrice),
       commission: parseFloat(packageForm.commission),
       features: packageForm.features.split('\n').filter(f => f.trim() !== '')
     };
     if (store.addPackage) store.addPackage(newPackage);
-    setPackages([...packages, newPackage]);
+    loadData();
     setShowPackageForm(false);
     setPackageForm({ name: '', price: '', originalPrice: '', commission: '', selectedCourses: [], features: '' });
   };
 
-  const handleCourseToggle = (courseId) => {
-    setPackageForm(prev => {
-      const selected = prev.selectedCourses.includes(courseId)
-        ? prev.selectedCourses.filter(id => id !== courseId)
-        : [...prev.selectedCourses, courseId];
-      return { ...prev, selectedCourses: selected };
-    });
+  const handleEditPackageSave = (e) => {
+    e.preventDefault();
+    if (!editingPackage) return;
+    if (store.updatePackage) {
+      store.updatePackage(editingPackage.id, editingPackage);
+    }
+    loadData();
+    setEditingPackage(null);
   };
 
   const handleDeletePackage = (id) => {
-    if (window.confirm('Are you sure you want to delete this package?')) {
+    if (window.confirm('Delete this package bundle?')) {
       if (store.deletePackage) store.deletePackage(id);
-      setPackages(packages.filter(p => p.id !== id));
+      loadData();
     }
   };
 
-  // --- Testimonial Handlers ---
-  const handleTestimonialSubmit = (e) => {
+  // --- Video & Testimonial Handlers ---
+  const handleVideoTestimonialSubmit = (e) => {
     e.preventDefault();
-    const newTestimonial = {
-      ...testimonialForm,
-      id: Date.now().toString(),
-      rating: parseInt(testimonialForm.rating)
-    };
-    setTestimonials([...testimonials, newTestimonial]);
-    setShowTestimonialForm(false);
-    setTestimonialForm({ name: '', role: '', content: '', rating: '5', avatar: '' });
+    if (store.addVideoTestimonial) {
+      store.addVideoTestimonial(videoForm);
+    }
+    loadData();
+    setShowVideoForm(false);
+    setVideoForm({
+      name: '', role: '', courseTag: '', badge: '300% SALARY HIKE',
+      avatar: '', thumbnail: '', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+      quote: '', rating: '5'
+    });
   };
 
-  const handleDeleteTestimonial = (id) => {
-    if (window.confirm('Delete this testimonial?')) {
-      setTestimonials(testimonials.filter(t => t.id !== id));
+  const handleDeleteVideoTestimonial = (id) => {
+    if (window.confirm('Delete this video testimonial?')) {
+      if (store.deleteVideoTestimonial) store.deleteVideoTestimonial(id);
+      loadData();
     }
   };
 
-  // --- Payout Handlers ---
+  // --- Security Payout Handlers ---
   const handleApprovePayout = (id) => {
-    const txnId = window.prompt('Enter Transaction ID for approval:');
+    const txnId = window.prompt('Security Gateway Check: Enter UPI Transaction ID for approval:');
     if (txnId) {
       if (store.approvePayout) store.approvePayout(id, txnId);
-      setPayouts(payouts.map(p => p.id === id ? { ...p, status: 'Completed', transactionId: txnId } : p));
+      loadData();
     }
   };
 
   const handleRejectPayout = (id) => {
-    if (window.confirm('Are you sure you want to reject this payout?')) {
+    if (window.confirm('Reject this referral commission payout request?')) {
       if (store.rejectPayout) store.rejectPayout(id);
-      setPayouts(payouts.map(p => p.id === id ? { ...p, status: 'Rejected' } : p));
+      loadData();
     }
   };
 
-  // --- Rendering ---
+  // --- Sidebar Component ---
   const renderSidebar = () => (
-    <aside className="w-full md:w-64 bg-gradient-to-b from-[#001845] to-[#002B70] text-white flex flex-col justify-between p-5 min-h-screen shrink-0">
+    <aside className="w-full md:w-64 bg-gradient-to-b from-[#001845] via-[#002B70] to-[#001845] text-white p-6 flex flex-col justify-between shrink-0 shadow-2xl relative border-r border-white/10">
       <div>
-        <div className="pb-6 border-b border-white/10 mb-6">
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-400 to-amber-500 flex items-center justify-center text-gray-950 font-heading font-extrabold text-lg shadow-md">
-              C
-            </div>
-            <span className="font-heading font-extrabold text-xl tracking-tight text-white">
-              Admin<span className="text-amber-400">CMS</span>
-            </span>
-          </Link>
+        <div className="flex items-center gap-2 mb-8">
+          <div className="w-10 h-10 rounded-xl bg-amber-500 text-gray-950 flex items-center justify-center font-heading font-extrabold text-xl shadow-lg">
+            CC
+          </div>
+          <div>
+            <span className="font-heading font-extrabold text-lg text-white block leading-none">ClassConnect</span>
+            <span className="text-[10px] text-amber-400 font-bold tracking-widest uppercase">Admin CMS Control</span>
+          </div>
         </div>
 
-        <nav className="space-y-1.5">
-          <button 
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-heading font-bold text-xs uppercase tracking-wider transition-all duration-200 ${activeTab === 'dashboard' ? 'bg-amber-500 text-gray-950 shadow-lg shadow-amber-500/20' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`} 
-            onClick={() => setActiveTab('dashboard')}
-          >
-            <LayoutDashboard size={18} /> <span>Dashboard</span>
-          </button>
-          <button 
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-heading font-bold text-xs uppercase tracking-wider transition-all duration-200 ${activeTab === 'courses' ? 'bg-amber-500 text-gray-950 shadow-lg shadow-amber-500/20' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`} 
-            onClick={() => setActiveTab('courses')}
-          >
-            <BookOpen size={18} /> <span>Courses & Lectures</span>
-          </button>
-          <button 
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-heading font-bold text-xs uppercase tracking-wider transition-all duration-200 ${activeTab === 'live' ? 'bg-amber-500 text-gray-950 shadow-lg shadow-amber-500/20' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`} 
-            onClick={() => setActiveTab('live')}
-          >
-            <Radio size={18} /> <span>Live Masterclasses</span>
-          </button>
-          <button 
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-heading font-bold text-xs uppercase tracking-wider transition-all duration-200 ${activeTab === 'packages' ? 'bg-amber-500 text-gray-950 shadow-lg shadow-amber-500/20' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`} 
-            onClick={() => setActiveTab('packages')}
-          >
-            <Package size={18} /> <span>Packages</span>
-          </button>
-          <button 
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-heading font-bold text-xs uppercase tracking-wider transition-all duration-200 ${activeTab === 'testimonials' ? 'bg-amber-500 text-gray-950 shadow-lg shadow-amber-500/20' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`} 
-            onClick={() => setActiveTab('testimonials')}
-          >
-            <MessageSquare size={18} /> <span>Testimonials</span>
-          </button>
-          <button 
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-heading font-bold text-xs uppercase tracking-wider transition-all duration-200 ${activeTab === 'users' ? 'bg-amber-500 text-gray-950 shadow-lg shadow-amber-500/20' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`} 
-            onClick={() => setActiveTab('users')}
-          >
-            <Users size={18} /> <span>Users & Registrations</span>
-          </button>
-          <button 
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-heading font-bold text-xs uppercase tracking-wider transition-all duration-200 ${activeTab === 'payouts' ? 'bg-amber-500 text-gray-950 shadow-lg shadow-amber-500/20' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`} 
-            onClick={() => setActiveTab('payouts')}
-          >
-            <DollarSign size={18} /> <span>Payout Requests</span>
-          </button>
+        <nav className="space-y-1">
+          {[
+            { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+            { id: 'courses', label: 'Courses & Lectures', icon: BookOpen },
+            { id: 'live', label: 'Live Masterclasses', icon: Radio },
+            { id: 'packages', label: 'Package Bundles', icon: Package },
+            { id: 'testimonials', label: 'Student Reviews', icon: MessageSquare },
+            { id: 'video-testimonials', label: 'Video Stories', icon: Video },
+            { id: 'users', label: 'Users & Registrations', icon: Users },
+            { id: 'payouts', label: 'Payout Requests', icon: DollarSign },
+          ].map(item => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-heading font-bold text-xs uppercase tracking-wider transition-all cursor-pointer ${
+                activeTab === item.id 
+                  ? 'bg-amber-500 text-gray-950 shadow-lg shadow-amber-500/20' 
+                  : 'text-gray-300 hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              <item.icon size={18} />
+              <span>{item.label}</span>
+            </button>
+          ))}
         </nav>
       </div>
 
-      <div className="pt-6 border-t border-white/10">
+      <div className="pt-6 border-t border-white/10 space-y-3">
+        <div className="flex items-center gap-2 text-[11px] text-amber-300 font-semibold bg-white/10 p-2.5 rounded-xl border border-white/10">
+          <ShieldCheck size={14} className="text-amber-400" />
+          <span>Security & SSL Protected</span>
+        </div>
+
         <button 
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white/10 hover:bg-red-500/20 hover:text-red-400 border border-white/10 text-xs font-heading font-bold uppercase tracking-wider transition-all" 
           onClick={onLogout}
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 text-xs font-heading font-bold uppercase tracking-wider transition-all cursor-pointer"
         >
           <LogOut size={16} /> <span>Logout</span>
         </button>
@@ -342,179 +330,165 @@ const AdminCMS = ({ currentUser, onLogout }) => {
     </aside>
   );
 
+  // --- Dashboard Tab ---
   const renderDashboard = () => (
     <div className="space-y-6">
-      <div className="bg-white border-b border-gray-200/80 p-6 rounded-2xl shadow-sm">
-        <h1 className="font-heading font-extrabold text-2xl text-gray-900">Dashboard Overview</h1>
+      <div className="bg-white border border-gray-200/80 p-6 rounded-3xl shadow-sm flex items-center justify-between">
+        <div>
+          <h1 className="font-heading font-extrabold text-2xl text-gray-900">Admin Control Center</h1>
+          <p className="text-xs text-gray-500 mt-1">Manage courses, live masterclasses, video stories, and referral payouts.</p>
+        </div>
+        <span className="px-3.5 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" /> System Operational
+        </span>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div className="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center shrink-0">
-            <BookOpen size={22} />
-          </div>
-          <div>
-            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Courses</h3>
-            <p className="font-heading font-extrabold text-2xl text-gray-900 mt-0.5">{courses.length}</p>
-          </div>
+        <div className="bg-white p-6 rounded-3xl border border-gray-200/80 shadow-sm">
+          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Total Courses</span>
+          <h3 className="font-heading font-extrabold text-3xl text-gray-900">{courses.length}</h3>
         </div>
-
-        <div className="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center shrink-0">
-            <Package size={22} />
-          </div>
-          <div>
-            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Packages</h3>
-            <p className="font-heading font-extrabold text-2xl text-gray-900 mt-0.5">{packages.length}</p>
-          </div>
+        <div className="bg-white p-6 rounded-3xl border border-gray-200/80 shadow-sm">
+          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Active Users</span>
+          <h3 className="font-heading font-extrabold text-3xl text-[#001845]">{users.length}</h3>
         </div>
-
-        <div className="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
-            <Users size={22} />
-          </div>
-          <div>
-            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Users</h3>
-            <p className="font-heading font-extrabold text-2xl text-gray-900 mt-0.5">{users.length}</p>
-          </div>
+        <div className="bg-white p-6 rounded-3xl border border-gray-200/80 shadow-sm">
+          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Package Bundles</span>
+          <h3 className="font-heading font-extrabold text-3xl text-amber-600">{packages.length}</h3>
         </div>
-
-        <div className="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0">
-            <Radio size={22} />
-          </div>
-          <div>
-            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Live Masterclasses</h3>
-            <p className="font-heading font-extrabold text-2xl text-amber-600 mt-0.5">{liveSessions.length}</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm space-y-4">
-        <h3 className="font-heading font-extrabold text-lg text-gray-900">Quick Actions</h3>
-        <div className="flex flex-wrap gap-4">
-          <button 
-            className="px-5 py-3 bg-primary-container hover:bg-primary text-white font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl shadow transition-all flex items-center gap-2 cursor-pointer" 
-            onClick={() => { setActiveTab('courses'); setShowCourseForm(true); }}
-          >
-            <Plus size={16} /> Add New Course
-          </button>
-          <button 
-            className="px-5 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl shadow transition-all flex items-center gap-2 cursor-pointer" 
-            onClick={() => { setActiveTab('live'); setShowLiveForm(true); }}
-          >
-            <Radio size={16} /> Go Live / Schedule Stream
-          </button>
-          <button 
-            className="px-5 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl shadow transition-all flex items-center gap-2 cursor-pointer" 
-            onClick={() => { setActiveTab('packages'); setShowPackageForm(true); }}
-          >
-            <Plus size={16} /> Add New Package
-          </button>
+        <div className="bg-white p-6 rounded-3xl border border-gray-200/80 shadow-sm">
+          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Payout Requests</span>
+          <h3 className="font-heading font-extrabold text-3xl text-emerald-600">{payouts.length}</h3>
         </div>
       </div>
     </div>
   );
 
+  // --- Courses Tab ---
   const renderCourses = () => (
     <div className="space-y-6">
-      <div className="bg-white border-b border-gray-200/80 p-6 rounded-2xl shadow-sm flex items-center justify-between">
+      <div className="bg-white border border-gray-200/80 p-6 rounded-3xl shadow-sm flex items-center justify-between">
         <div>
           <h1 className="font-heading font-extrabold text-2xl text-gray-900">Courses & Unit Lectures</h1>
-          <p className="text-xs text-gray-500 mt-1">Upload photos/cover images via Bunny Storage CDN & videos via Bunny Stream CDN.</p>
+          <p className="text-xs text-gray-500 mt-1">Add courses, set Bunny CDN video streams, and edit unit modules.</p>
         </div>
         <button 
-          className="px-5 py-2.5 bg-primary-container hover:bg-primary text-white font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl shadow transition-all flex items-center gap-2 cursor-pointer" 
-          onClick={() => setShowCourseForm(!showCourseForm)}
+          onClick={() => setShowCourseForm(true)}
+          className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-gray-950 font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer"
         >
-          {showCourseForm ? <X size={16} /> : <Plus size={16} />} {showCourseForm ? 'Cancel' : 'Add New Course'}
+          <Plus size={16} /> Add Course
         </button>
       </div>
 
       {showCourseForm && (
-        <div className="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm space-y-4">
-          <h3 className="font-heading font-extrabold text-lg text-gray-900">Add New Course</h3>
+        <div className="bg-white p-6 rounded-3xl border border-amber-200 shadow-md">
+          <h3 className="font-heading font-extrabold text-lg text-gray-900 mb-4">Create New Masterclass Course</h3>
           <form onSubmit={handleCourseSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Title</label>
-                <input type="text" value={courseForm.title} onChange={e => setCourseForm({...courseForm, title: e.target.value})} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none" />
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Course Title *</label>
+                <input type="text" value={courseForm.title} onChange={e => setCourseForm({...courseForm, title: e.target.value})} required className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-900" placeholder="e.g. React 19 & Next.js 15 Pro" />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Category</label>
-                <select value={courseForm.category} onChange={e => setCourseForm({...courseForm, category: e.target.value})} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none">
-                  <option value="">Select Category</option>
-                  <option value="Technology">Technology</option>
-                  <option value="Design">Design</option>
-                  <option value="Business">Business</option>
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Category *</label>
+                <select value={courseForm.category} onChange={e => setCourseForm({...courseForm, category: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-900">
+                  <option value="Development">Development</option>
                   <option value="Marketing">Marketing</option>
+                  <option value="AI & Tech">AI & Tech</option>
+                  <option value="Design">Design</option>
                 </select>
               </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Discounted Price (₹) *</label>
+                <input type="number" value={courseForm.price} onChange={e => setCourseForm({...courseForm, price: e.target.value})} required className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-900" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Original Strikethrough Price (₹) *</label>
+                <input type="number" value={courseForm.originalPrice} onChange={e => setCourseForm({...courseForm, originalPrice: e.target.value})} required className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-900" />
+              </div>
             </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Description</label>
-              <textarea value={courseForm.description} onChange={e => setCourseForm({...courseForm, description: e.target.value})} rows="3" required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none"></textarea>
-            </div>
-            <ImageUploader 
-              value={courseForm.thumbnail} 
-              onChange={val => setCourseForm({...courseForm, thumbnail: val})} 
-              label="Upload Course Cover Image (Bunny Storage)" 
-              subfolder="courses" 
+
+            <MediaUploader 
+              value={courseForm.thumbnail}
+              onChange={url => setCourseForm({...courseForm, thumbnail: url})}
+              label="Course Cover Photo Upload"
+              type="image"
+              subfolder="courses"
             />
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Discounted Price (₹)</label>
-                <input type="number" value={courseForm.price} onChange={e => setCourseForm({...courseForm, price: e.target.value})} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none" />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Original Price (₹)</label>
-                <input type="number" value={courseForm.originalPrice} onChange={e => setCourseForm({...courseForm, originalPrice: e.target.value})} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none" />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Duration (e.g. 10 hours)</label>
-                <input type="text" value={courseForm.duration} onChange={e => setCourseForm({...courseForm, duration: e.target.value})} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none" />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Level</label>
-                <select value={courseForm.level} onChange={e => setCourseForm({...courseForm, level: e.target.value})} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none">
-                  <option value="Beginner">Beginner</option>
-                  <option value="Intermediate">Intermediate</option>
-                  <option value="Advanced">Advanced</option>
-                </select>
-              </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Course Description *</label>
+              <textarea value={courseForm.description} onChange={e => setCourseForm({...courseForm, description: e.target.value})} required rows="2" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-900" placeholder="Course overview..." />
             </div>
-            <div className="flex items-center gap-2">
-              <input type="checkbox" checked={courseForm.featured} onChange={e => setCourseForm({...courseForm, featured: e.target.checked})} className="rounded border-gray-300 text-amber-500" />
-              <label className="text-xs font-bold text-gray-700">Featured Course</label>
+
+            <div className="flex gap-3 pt-2">
+              <button type="submit" className="px-5 py-2.5 bg-[#001845] hover:bg-[#002B70] text-white font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl shadow cursor-pointer">Save Course</button>
+              <button type="button" onClick={() => setShowCourseForm(false)} className="px-5 py-2.5 bg-gray-100 text-gray-700 font-bold text-xs uppercase tracking-wider rounded-xl cursor-pointer">Cancel</button>
             </div>
-            <button type="submit" className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl shadow cursor-pointer">Save Course</button>
           </form>
         </div>
       )}
 
-      {/* Unit-Wise Lecture Manager Modal */}
-      {activeLectureCourse && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl max-w-3xl w-full p-6 md:p-8 space-y-6 shadow-2xl my-auto max-h-[85vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-gray-200 pb-4">
-              <div>
-                <h3 className="font-heading font-extrabold text-xl text-gray-900">Unit-Wise Lecture Manager</h3>
-                <p className="text-xs text-gray-500 mt-0.5">Course: <strong className="text-primary-container">{activeLectureCourse.title}</strong></p>
-              </div>
-              <button className="p-2 text-gray-400 hover:text-gray-700 rounded-xl hover:bg-gray-100" onClick={() => setActiveLectureCourse(null)}>
-                <X size={20} />
-              </button>
-            </div>
+      {/* Courses List Table */}
+      <div className="bg-white rounded-3xl p-6 border border-gray-200/80 shadow-sm overflow-x-auto">
+        <table className="w-full text-left text-xs">
+          <thead>
+            <tr className="border-b border-gray-200 bg-gray-50 text-gray-600 font-heading font-bold uppercase tracking-wider">
+              <th className="py-3 px-4">Course</th>
+              <th className="py-3 px-4">Category</th>
+              <th className="py-3 px-4">Price</th>
+              <th className="py-3 px-4">Lessons</th>
+              <th className="py-3 px-4">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {courses.map(course => (
+              <tr key={course.id} className="hover:bg-gray-50/50">
+                <td className="py-3 px-4 font-bold text-gray-900 flex items-center gap-2">
+                  <img src={course.thumbnail} alt={course.title} className="w-10 h-8 rounded-lg object-cover" />
+                  <span>{course.title}</span>
+                </td>
+                <td className="py-3 px-4 text-gray-600">{course.category}</td>
+                <td className="py-3 px-4 font-extrabold text-amber-600">₹{course.price?.toLocaleString('en-IN')}</td>
+                <td className="py-3 px-4 text-gray-700">{course.lessons || 24} Lectures</td>
+                <td className="py-3 px-4 flex items-center gap-2">
+                  <button 
+                    onClick={() => setActiveLectureCourse(course)} 
+                    className="px-3 py-1 bg-blue-50 text-blue-700 font-bold rounded-lg border border-blue-200 hover:bg-blue-100 cursor-pointer"
+                  >
+                    Manage Units
+                  </button>
+                  <button 
+                    onClick={() => handleDeleteCourse(course.id)} 
+                    className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg cursor-pointer"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-            {/* Add New Lecture Form */}
-            <form onSubmit={handleAddLectureSubmit} className="bg-gray-50 p-5 rounded-2xl border border-gray-200 space-y-4">
-              <h4 className="font-heading font-bold text-sm text-gray-900 flex items-center gap-2">
-                <Plus size={16} className="text-amber-500" /> Add New Unit Lecture
-              </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      {/* Unit-wise Lecture Management Modal */}
+      {activeLectureCourse && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl border border-gray-200 p-6 max-w-3xl w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button onClick={() => setActiveLectureCourse(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700">
+              <X size={20} />
+            </button>
+
+            <h3 className="font-heading font-extrabold text-xl text-gray-900 mb-1">
+              Unit-wise Lecture Manager: {activeLectureCourse.title}
+            </h3>
+            <p className="text-xs text-gray-500 mb-6">Add lectures with live Bunny Stream CDN video previews.</p>
+
+            <form onSubmit={handleAddLectureSubmit} className="space-y-4 mb-6 bg-gray-50 p-4 rounded-2xl border border-gray-200">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">Unit Number</label>
-                  <select value={lectureForm.unitNumber} onChange={e => setLectureForm({...lectureForm, unitNumber: e.target.value, unitTitle: `Unit ${e.target.value}: Core Module`})} className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs font-semibold outline-none">
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Unit Number *</label>
+                  <select value={lectureForm.unitNumber} onChange={e => setLectureForm({...lectureForm, unitNumber: e.target.value})} className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs">
                     <option value="1">Unit 1</option>
                     <option value="2">Unit 2</option>
                     <option value="3">Unit 3</option>
@@ -522,189 +496,84 @@ const AdminCMS = ({ currentUser, onLogout }) => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">Unit Header Title</label>
-                  <input type="text" value={lectureForm.unitTitle} onChange={e => setLectureForm({...lectureForm, unitTitle: e.target.value})} required className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs outline-none" />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">Lecture Title</label>
-                  <input type="text" placeholder="e.g. Introduction & Setup" value={lectureForm.title} onChange={e => setLectureForm({...lectureForm, title: e.target.value})} required className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs outline-none" />
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Lecture Title *</label>
+                  <input type="text" value={lectureForm.title} onChange={e => setLectureForm({...lectureForm, title: e.target.value})} required className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs" placeholder="e.g. Introduction & Project Setup" />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">Bunny Stream Video URL / Path</label>
-                  <input type="text" placeholder="unit1/lesson1_video.mp4" value={lectureForm.videoUrl} onChange={e => setLectureForm({...lectureForm, videoUrl: e.target.value})} required className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs font-mono outline-none" />
-                  <span className="text-[10px] text-gray-400">Stream CDN: <code className="text-amber-600 font-bold">{store.BUNNY_STREAM_CDN}/...</code></span>
-                </div>
-                <ImageUploader 
-                  value={lectureForm.thumbnailUrl} 
-                  onChange={val => setLectureForm({...lectureForm, thumbnailUrl: val})} 
-                  label="Upload Lecture Thumbnail" 
-                  subfolder="lessons" 
-                />
-              </div>
+              <MediaUploader 
+                value={lectureForm.videoUrl}
+                onChange={url => setLectureForm({...lectureForm, videoUrl: url})}
+                label="Lecture Video File Upload (MP4 / Bunny Stream CDN)"
+                type="video"
+                subfolder="lessons"
+              />
 
-              <div className="flex items-center justify-between pt-2">
-                <label className="flex items-center gap-2 text-xs font-bold text-gray-700 cursor-pointer">
-                  <input type="checkbox" checked={lectureForm.isFreePreview} onChange={e => setLectureForm({...lectureForm, isFreePreview: e.target.checked})} className="rounded border-gray-300 text-amber-500" />
-                  <span>Free Preview Lecture</span>
-                </label>
-                <button type="submit" className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl shadow cursor-pointer">
-                  Upload & Save Lecture
-                </button>
-              </div>
+              <button type="submit" className="w-full py-3 bg-[#001845] hover:bg-[#002B70] text-white font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl shadow cursor-pointer">
+                Add Lecture to Unit
+              </button>
             </form>
-
-            {/* Existing Units & Lectures */}
-            <div className="space-y-4 max-h-80 overflow-y-auto pr-2">
-              <h4 className="font-heading font-extrabold text-sm text-gray-900">Current Course Units</h4>
-              {(!activeLectureCourse.units || activeLectureCourse.units.length === 0) ? (
-                <p className="text-xs text-gray-500 italic p-4 text-center bg-gray-50 rounded-xl">No unit lectures added yet.</p>
-              ) : (
-                activeLectureCourse.units.map((unit, uIdx) => (
-                  <div key={uIdx} className="bg-white border border-gray-200 rounded-2xl p-4 space-y-2 shadow-sm">
-                    <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-                      <span className="font-heading font-extrabold text-xs text-primary-container uppercase tracking-wider">{unit.title || `Unit ${unit.unitNumber}`}</span>
-                      <span className="text-[11px] font-bold text-gray-400">{unit.lessons?.length || 0} Lectures</span>
-                    </div>
-                    <div className="divide-y divide-gray-100">
-                      {unit.lessons?.map((les, lIdx) => (
-                        <div key={lIdx} className="py-2 flex items-center justify-between text-xs">
-                          <div>
-                            <span className="font-bold text-gray-900">{les.title}</span>
-                            <span className="text-gray-400 ml-2">({les.duration})</span>
-                            <div className="text-[10px] text-gray-400 font-mono truncate max-w-xs">{les.videoUrl}</div>
-                          </div>
-                          <button className="p-1 text-red-500 hover:bg-red-50 rounded-md" onClick={() => handleDeleteLecture(les.id)}>
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
           </div>
         </div>
       )}
-
-      {/* Courses Table */}
-      <div className="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm overflow-x-auto">
-        <table className="w-full text-left text-xs">
-          <thead>
-            <tr className="border-b border-gray-200 bg-gray-50 text-gray-600 font-heading font-bold uppercase tracking-wider">
-              <th className="py-3 px-4">Cover (Bunny CDN)</th>
-              <th className="py-3 px-4">Title</th>
-              <th className="py-3 px-4">Category</th>
-              <th className="py-3 px-4">Price (₹)</th>
-              <th className="py-3 px-4">Original (₹)</th>
-              <th className="py-3 px-4">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {courses.map(course => (
-              <tr key={course.id} className="hover:bg-gray-50/50">
-                <td className="py-3 px-4">
-                  <div className="relative group w-14 h-10 rounded-lg overflow-hidden border border-gray-200 bg-gray-100 cursor-pointer" onClick={() => handleUpdateCoverImage(course)} title="Click to Update Cover Image">
-                    {course.thumbnail ? (
-                      <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400"><ImageIcon size={18} /></div>
-                    )}
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
-                      <Upload size={14} />
-                    </div>
-                  </div>
-                </td>
-                <td className="py-3 px-4 font-bold text-gray-900">{course.title}</td>
-                <td className="py-3 px-4 text-gray-600">{course.category}</td>
-                <td className="py-3 px-4 font-extrabold text-amber-600">₹{course.price || 2499}</td>
-                <td className="py-3 px-4 text-gray-400 line-through">₹{course.originalPrice || 4999}</td>
-                <td className="py-3 px-4">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <button className="px-2.5 py-1.5 text-[10px] bg-primary-container hover:bg-primary text-white font-bold uppercase tracking-wider rounded-lg transition-colors flex items-center gap-1 cursor-pointer" onClick={() => setActiveLectureCourse(course)} title="Manage Unit-wise Lectures">
-                      <Layers size={12} /> Add Lectures
-                    </button>
-                    <button className="px-2.5 py-1.5 text-[10px] bg-amber-500 hover:bg-amber-600 text-white font-bold uppercase tracking-wider rounded-lg transition-colors cursor-pointer" onClick={() => handleEditCoursePrice(course)} title="Edit Discount & Strikethrough Price">
-                      Edit Price
-                    </button>
-                    <button className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer" onClick={() => handleDeleteCourse(course.id)} title="Delete">
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {courses.length === 0 && <tr><td colSpan="6" className="text-center text-gray-500 py-6">No courses found.</td></tr>}
-          </tbody>
-        </table>
-      </div>
     </div>
   );
 
+  // --- Live Sessions Tab ---
   const renderLiveSessions = () => (
     <div className="space-y-6">
-      <div className="bg-white border-b border-gray-200/80 p-6 rounded-2xl shadow-sm flex items-center justify-between">
+      <div className="bg-white border border-gray-200/80 p-6 rounded-3xl shadow-sm flex items-center justify-between">
         <div>
-          <h1 className="font-heading font-extrabold text-2xl text-gray-900">Live Masterclasses & Broadcasts</h1>
-          <p className="text-xs text-gray-500 mt-1">Go live now or schedule streams with Bunny Stream live feeds (`vz-e90d4726-817.b-cdn.net`).</p>
+          <h1 className="font-heading font-extrabold text-2xl text-gray-900">Live Masterclasses</h1>
+          <p className="text-xs text-gray-500 mt-1">Schedule live classes and launch instructor WebRTC studio feeds.</p>
         </div>
         <button 
-          className="px-5 py-2.5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl shadow transition-all flex items-center gap-2 cursor-pointer" 
-          onClick={() => setShowLiveForm(!showLiveForm)}
+          onClick={() => setShowLiveForm(true)}
+          className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-gray-950 font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer"
         >
-          {showLiveForm ? <X size={16} /> : <Radio size={16} />} {showLiveForm ? 'Cancel' : 'Go Live / Schedule Session'}
+          <Radio size={16} /> Create Live Class
         </button>
       </div>
 
       {showLiveForm && (
-        <div className="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm space-y-4">
-          <h3 className="font-heading font-extrabold text-lg text-gray-900">Create Live Masterclass</h3>
+        <div className="bg-white p-6 rounded-3xl border border-amber-200 shadow-md">
+          <h3 className="font-heading font-extrabold text-lg text-gray-900 mb-4">Create Live Masterclass</h3>
           <form onSubmit={handleLiveSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Session Title</label>
-                <input type="text" placeholder="e.g. React 19 & Next.js 15 Live Q&A" value={liveForm.title} onChange={e => setLiveForm({...liveForm, title: e.target.value})} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none" />
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Class Title *</label>
+                <input type="text" value={liveForm.title} onChange={e => setLiveForm({...liveForm, title: e.target.value})} required className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs" placeholder="e.g. Live Q&A & Code Review" />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Instructor</label>
-                <input type="text" value={liveForm.instructor} onChange={e => setLiveForm({...liveForm, instructor: e.target.value})} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none" />
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Scheduled Time *</label>
+                <input type="datetime-local" value={liveForm.scheduledAt} onChange={e => setLiveForm({...liveForm, scheduledAt: e.target.value})} required className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs" />
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Start Time / Schedule</label>
-                <input type="datetime-local" value={liveForm.scheduledAt} onChange={e => setLiveForm({...liveForm, scheduledAt: e.target.value})} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none" />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Bunny Stream RTMP/Live Feed URL</label>
-                <input type="text" placeholder="live/mern_live_stream.mp4" value={liveForm.streamUrl} onChange={e => setLiveForm({...liveForm, streamUrl: e.target.value})} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono outline-none" />
-              </div>
-            <ImageUploader 
-              value={liveForm.coverImage} 
-              onChange={val => setLiveForm({...liveForm, coverImage: val})} 
-              label="Upload Broadcast Cover Photo" 
-              subfolder="live" 
+
+            <MediaUploader 
+              value={liveForm.coverImage}
+              onChange={url => setLiveForm({...liveForm, coverImage: url})}
+              label="Live Masterclass Cover Photo"
+              type="image"
+              subfolder="live"
             />
+
+            <div className="flex gap-3 pt-2">
+              <button type="submit" className="px-5 py-2.5 bg-[#001845] hover:bg-[#002B70] text-white font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl cursor-pointer">Schedule Masterclass</button>
+              <button type="button" onClick={() => setShowLiveForm(false)} className="px-5 py-2.5 bg-gray-100 text-gray-700 font-bold text-xs uppercase tracking-wider rounded-xl cursor-pointer">Cancel</button>
             </div>
-            <button type="submit" className="px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl shadow cursor-pointer">
-              Broadcast Session
-            </button>
           </form>
         </div>
       )}
 
-      {/* Live Sessions Table */}
-      <div className="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm overflow-x-auto">
+      {/* Live Sessions List Table */}
+      <div className="bg-white rounded-3xl p-6 border border-gray-200/80 shadow-sm overflow-x-auto">
         <table className="w-full text-left text-xs">
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50 text-gray-600 font-heading font-bold uppercase tracking-wider">
-              <th className="py-3 px-4">Title</th>
-              <th className="py-3 px-4">Instructor</th>
-              <th className="py-3 px-4">Stream URL (Bunny)</th>
+              <th className="py-3 px-4">Class</th>
               <th className="py-3 px-4">Status</th>
+              <th className="py-3 px-4">Instructor</th>
               <th className="py-3 px-4">Actions</th>
             </tr>
           </thead>
@@ -712,119 +581,61 @@ const AdminCMS = ({ currentUser, onLogout }) => {
             {liveSessions.map(session => (
               <tr key={session.id} className="hover:bg-gray-50/50">
                 <td className="py-3 px-4 font-bold text-gray-900">{session.title}</td>
-                <td className="py-3 px-4 text-gray-700">{session.instructor}</td>
-                <td className="py-3 px-4 font-mono text-[11px] text-amber-600 truncate max-w-xs">{session.streamUrl}</td>
                 <td className="py-3 px-4">
-                  <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wider ${
-                    session.status === 'LIVE_NOW' 
-                      ? 'bg-red-500 text-white animate-pulse' 
-                      : session.status === 'COMPLETED'
-                      ? 'bg-gray-200 text-gray-700'
-                      : 'bg-blue-100 text-blue-800'
+                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
+                    session.status === 'LIVE_NOW' ? 'bg-red-500 text-white animate-pulse' : 'bg-blue-100 text-blue-800'
                   }`}>
-                    {session.status === 'LIVE_NOW' && <Radio size={12} />}
                     {session.status}
                   </span>
                 </td>
-                <td className="py-3 px-4">
-                  <div className="flex items-center gap-2">
-                    <button 
-                      className="px-3 py-1.5 text-[10px] font-extrabold bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white uppercase tracking-wider rounded-lg shadow transition-all cursor-pointer flex items-center gap-1"
-                      onClick={() => setActiveStudioSession(session)}
-                    >
-                      <Radio size={12} /> Launch Studio
-                    </button>
-                    <button 
-                      className={`px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider rounded-lg shadow transition-all cursor-pointer ${
-                        session.status === 'SCHEDULED' 
-                          ? 'bg-amber-500 hover:bg-amber-600 text-white' 
-                          : session.status === 'LIVE_NOW'
-                          ? 'bg-gray-800 hover:bg-black text-white'
-                          : 'bg-gray-500 hover:bg-gray-600 text-white'
-                      }`}
-                      onClick={() => handleToggleLiveStatus(session)}
-                    >
-                      {session.status === 'SCHEDULED' ? 'GO LIVE' : session.status === 'LIVE_NOW' ? 'END STREAM' : 'RESTART'}
-                    </button>
-                  </div>
+                <td className="py-3 px-4 text-gray-600">{session.instructor}</td>
+                <td className="py-3 px-4 flex items-center gap-2">
+                  <button 
+                    onClick={() => setActiveStudioSession(session)}
+                    className="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 text-white font-heading font-bold text-xs uppercase tracking-wider rounded-xl shadow cursor-pointer flex items-center gap-1"
+                  >
+                    <Radio size={14} /> Launch Studio
+                  </button>
+                  <button 
+                    onClick={() => handleDeleteLiveSession(session.id)}
+                    className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg cursor-pointer"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </td>
               </tr>
             ))}
-            {liveSessions.length === 0 && <tr><td colSpan="5" className="text-center text-gray-500 py-6">No live sessions found.</td></tr>}
           </tbody>
         </table>
       </div>
     </div>
   );
 
+  // --- Packages Tab ---
   const renderPackages = () => (
     <div className="space-y-6">
-      <div className="bg-white border-b border-gray-200/80 p-6 rounded-2xl shadow-sm flex items-center justify-between">
-        <h1 className="font-heading font-extrabold text-2xl text-gray-900">Packages Management</h1>
+      <div className="bg-white border border-gray-200/80 p-6 rounded-3xl shadow-sm flex items-center justify-between">
+        <div>
+          <h1 className="font-heading font-extrabold text-2xl text-gray-900">Package Bundles</h1>
+          <p className="text-xs text-gray-500 mt-1">Manage bundle pricing and direct referral commissions.</p>
+        </div>
         <button 
-          className="px-5 py-2.5 bg-primary-container hover:bg-primary text-white font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl shadow transition-all flex items-center gap-2 cursor-pointer" 
-          onClick={() => setShowPackageForm(!showPackageForm)}
+          onClick={() => setShowPackageForm(true)}
+          className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-gray-950 font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer"
         >
-          {showPackageForm ? <X size={16} /> : <Plus size={16} />} {showPackageForm ? 'Cancel' : 'Add New Package'}
+          <Plus size={16} /> Add Package
         </button>
       </div>
 
-      {showPackageForm && (
-        <div className="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm space-y-4">
-          <h3 className="font-heading font-extrabold text-lg text-gray-900">Add New Package</h3>
-          <form onSubmit={handlePackageSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Package Name</label>
-                <input type="text" value={packageForm.name} onChange={e => setPackageForm({...packageForm, name: e.target.value})} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none" />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Price (₹)</label>
-                <input type="number" value={packageForm.price} onChange={e => setPackageForm({...packageForm, price: e.target.value})} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none" />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Original Price (₹)</label>
-                <input type="number" value={packageForm.originalPrice} onChange={e => setPackageForm({...packageForm, originalPrice: e.target.value})} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none" />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Commission per Referral (₹)</label>
-                <input type="number" value={packageForm.commission} onChange={e => setPackageForm({...packageForm, commission: e.target.value})} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none" />
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Select Included Courses</label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 bg-gray-50 p-4 rounded-xl border border-gray-200">
-                {courses.map(course => (
-                  <label key={course.id} className="flex items-center gap-2 text-xs font-medium text-gray-700 cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      checked={packageForm.selectedCourses.includes(course.id)}
-                      onChange={() => handleCourseToggle(course.id)}
-                      className="rounded border-gray-300 text-amber-500"
-                    />
-                    <span className="truncate">{course.title}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Features (One per line)</label>
-              <textarea value={packageForm.features} onChange={e => setPackageForm({...packageForm, features: e.target.value})} rows="4" required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none"></textarea>
-            </div>
-            <button type="submit" className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl shadow cursor-pointer">Save Package</button>
-          </form>
-        </div>
-      )}
-
-      <div className="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm overflow-x-auto">
+      {/* Packages Table */}
+      <div className="bg-white rounded-3xl p-6 border border-gray-200/80 shadow-sm overflow-x-auto">
         <table className="w-full text-left text-xs">
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50 text-gray-600 font-heading font-bold uppercase tracking-wider">
-              <th className="py-3 px-4">Name</th>
+              <th className="py-3 px-4">Package</th>
               <th className="py-3 px-4">Price</th>
               <th className="py-3 px-4">Original Price</th>
-              <th className="py-3 px-4">Courses Count</th>
-              <th className="py-3 px-4">Commission</th>
+              <th className="py-3 px-4">Referral Commission</th>
               <th className="py-3 px-4">Actions</th>
             </tr>
           </thead>
@@ -832,126 +643,39 @@ const AdminCMS = ({ currentUser, onLogout }) => {
             {packages.map(pkg => (
               <tr key={pkg.id} className="hover:bg-gray-50/50">
                 <td className="py-3 px-4 font-bold text-gray-900">{pkg.name}</td>
-                <td className="py-3 px-4 font-extrabold text-gray-900">₹{pkg.price}</td>
-                <td className="py-3 px-4 text-gray-400 line-through">₹{pkg.originalPrice}</td>
-                <td className="py-3 px-4 text-gray-700">{pkg.courses?.length || pkg.selectedCourses?.length || 0}</td>
-                <td className="py-3 px-4 font-extrabold text-emerald-600">₹{pkg.commission}</td>
-                <td className="py-3 px-4">
-                  <div className="flex items-center gap-2">
-                    <button className="px-3 py-1 text-[10px] bg-amber-500 hover:bg-amber-600 text-white font-bold uppercase tracking-wider rounded-lg transition-colors" onClick={() => handleEditPackagePrice(pkg)} title="Edit Package Price & Commission">
-                      Edit Price
-                    </button>
-                    <button className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors" onClick={() => handleDeletePackage(pkg.id)} title="Delete">
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {packages.length === 0 && <tr><td colSpan="6" className="text-center text-gray-500 py-6">No packages found.</td></tr>}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-
-  const renderTestimonials = () => (
-    <div className="space-y-6">
-      <div className="bg-white border-b border-gray-200/80 p-6 rounded-2xl shadow-sm flex items-center justify-between">
-        <h1 className="font-heading font-extrabold text-2xl text-gray-900">Testimonials</h1>
-        <button 
-          className="px-5 py-2.5 bg-primary-container hover:bg-primary text-white font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl shadow transition-all flex items-center gap-2 cursor-pointer" 
-          onClick={() => setShowTestimonialForm(!showTestimonialForm)}
-        >
-          {showTestimonialForm ? <X size={16} /> : <Plus size={16} />} {showTestimonialForm ? 'Cancel' : 'Add Testimonial'}
-        </button>
-      </div>
-
-      {showTestimonialForm && (
-        <div className="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm space-y-4">
-          <h3 className="font-heading font-extrabold text-lg text-gray-900">Add Testimonial</h3>
-          <form onSubmit={handleTestimonialSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Name</label>
-                <input type="text" value={testimonialForm.name} onChange={e => setTestimonialForm({...testimonialForm, name: e.target.value})} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none" />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Role</label>
-                <input type="text" value={testimonialForm.role} onChange={e => setTestimonialForm({...testimonialForm, role: e.target.value})} required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none" />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Rating</label>
-                <select value={testimonialForm.rating} onChange={e => setTestimonialForm({...testimonialForm, rating: e.target.value})} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none">
-                  {[1,2,3,4,5].map(n => <option key={n} value={n}>{n} Stars</option>)}
-                </select>
-              </div>
-            </div>
-            <ImageUploader 
-              value={testimonialForm.avatar} 
-              onChange={val => setTestimonialForm({...testimonialForm, avatar: val})} 
-              label="Upload Student Avatar Image" 
-              subfolder="avatars" 
-            />
-            <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Content</label>
-              <textarea value={testimonialForm.content} onChange={e => setTestimonialForm({...testimonialForm, content: e.target.value})} rows="3" required className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none"></textarea>
-            </div>
-            <button type="submit" className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl shadow cursor-pointer">Save Testimonial</button>
-          </form>
-        </div>
-      )}
-
-      <div className="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm overflow-x-auto">
-        <table className="w-full text-left text-xs">
-          <thead>
-            <tr className="border-b border-gray-200 bg-gray-50 text-gray-600 font-heading font-bold uppercase tracking-wider">
-              <th className="py-3 px-4">Avatar</th>
-              <th className="py-3 px-4">Name</th>
-              <th className="py-3 px-4">Role</th>
-              <th className="py-3 px-4">Content Preview</th>
-              <th className="py-3 px-4">Rating</th>
-              <th className="py-3 px-4">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {testimonials.map(t => (
-              <tr key={t.id} className="hover:bg-gray-50/50">
-                <td className="py-3 px-4"><img src={t.avatar} alt={t.name} className="w-8 h-8 rounded-full object-cover" /></td>
-                <td className="py-3 px-4 font-bold text-gray-900">{t.name}</td>
-                <td className="py-3 px-4 text-gray-600">{t.role}</td>
-                <td className="py-3 px-4 text-gray-500 max-w-xs truncate">{t.content}</td>
-                <td className="py-3 px-4 font-bold text-amber-500">{t.rating} ⭐</td>
-                <td className="py-3 px-4">
-                  <button className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors" onClick={() => handleDeleteTestimonial(t.id)} title="Delete">
+                <td className="py-3 px-4 font-extrabold text-amber-600">₹{pkg.price?.toLocaleString('en-IN')}</td>
+                <td className="py-3 px-4 text-gray-400 line-through">₹{pkg.originalPrice?.toLocaleString('en-IN')}</td>
+                <td className="py-3 px-4 font-extrabold text-emerald-600">₹{pkg.commission?.toLocaleString('en-IN')}</td>
+                <td className="py-3 px-4 flex items-center gap-2">
+                  <button 
+                    onClick={() => handleDeletePackage(pkg.id)}
+                    className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg cursor-pointer"
+                  >
                     <Trash2 size={16} />
                   </button>
                 </td>
               </tr>
             ))}
-            {testimonials.length === 0 && <tr><td colSpan="6" className="text-center text-gray-500 py-6">No testimonials found.</td></tr>}
           </tbody>
         </table>
       </div>
     </div>
   );
 
+  // --- Users & Payouts Tabs ---
   const renderUsers = () => (
     <div className="space-y-6">
-      <div className="bg-white border-b border-gray-200/80 p-6 rounded-2xl shadow-sm">
+      <div className="bg-white border border-gray-200/80 p-6 rounded-3xl shadow-sm">
         <h1 className="font-heading font-extrabold text-2xl text-gray-900">Users & Registrations</h1>
       </div>
-      <div className="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm overflow-x-auto">
+      <div className="bg-white rounded-3xl p-6 border border-gray-200/80 shadow-sm overflow-x-auto">
         <table className="w-full text-left text-xs">
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50 text-gray-600 font-heading font-bold uppercase tracking-wider">
               <th className="py-3 px-4">Name</th>
               <th className="py-3 px-4">Email</th>
               <th className="py-3 px-4">Role</th>
-              <th className="py-3 px-4">Package</th>
               <th className="py-3 px-4">Referral Code</th>
-              <th className="py-3 px-4">Referrals</th>
-              <th className="py-3 px-4">Earnings</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -960,17 +684,13 @@ const AdminCMS = ({ currentUser, onLogout }) => {
                 <td className="py-3 px-4 font-bold text-gray-900">{user.name}</td>
                 <td className="py-3 px-4 text-gray-600">{user.email}</td>
                 <td className="py-3 px-4">
-                  <span className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wider ${user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
+                  <span className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase ${user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
                     {user.role}
                   </span>
                 </td>
-                <td className="py-3 px-4 text-gray-700">{user.packageId ? (packages.find(p => p.id === user.packageId)?.name || user.packageId) : '-'}</td>
-                <td className="py-3 px-4 font-mono font-bold text-gray-800">{user.referralCode || '-'}</td>
-                <td className="py-3 px-4 text-gray-700">{user.referrals?.length || 0}</td>
-                <td className="py-3 px-4 font-extrabold text-emerald-600">₹{user.earnings || 0}</td>
+                <td className="py-3 px-4 font-mono text-gray-800 font-bold">{user.referralCode || '-'}</td>
               </tr>
             ))}
-            {users.length === 0 && <tr><td colSpan="7" className="text-center text-gray-500 py-6">No users found.</td></tr>}
           </tbody>
         </table>
       </div>
@@ -979,59 +699,46 @@ const AdminCMS = ({ currentUser, onLogout }) => {
 
   const renderPayouts = () => (
     <div className="space-y-6">
-      <div className="bg-white border-b border-gray-200/80 p-6 rounded-2xl shadow-sm">
-        <h1 className="font-heading font-extrabold text-2xl text-gray-900">Payout Requests</h1>
+      <div className="bg-white border border-gray-200/80 p-6 rounded-3xl shadow-sm flex items-center justify-between">
+        <div>
+          <h1 className="font-heading font-extrabold text-2xl text-gray-900">Referral Payout Requests</h1>
+          <p className="text-xs text-gray-500 mt-1">Review and process student commission payouts via encrypted UPI verification.</p>
+        </div>
       </div>
-      <div className="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm overflow-x-auto">
+      <div className="bg-white rounded-3xl p-6 border border-gray-200/80 shadow-sm overflow-x-auto">
         <table className="w-full text-left text-xs">
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50 text-gray-600 font-heading font-bold uppercase tracking-wider">
               <th className="py-3 px-4">User</th>
               <th className="py-3 px-4">Amount</th>
-              <th className="py-3 px-4">Bank Details</th>
-              <th className="py-3 px-4">Request Date</th>
+              <th className="py-3 px-4">UPI ID</th>
               <th className="py-3 px-4">Status</th>
               <th className="py-3 px-4">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {payouts.map(req => {
-              const u = users.find(u => u.id === req.userId);
-              return (
-                <tr key={req.id} className="hover:bg-gray-50/50">
-                  <td className="py-3 px-4 font-bold text-gray-900">{u ? u.name : (req.userName || 'Unknown User')}</td>
-                  <td className="py-3 px-4 font-extrabold text-emerald-600">₹{req.amount}</td>
-                  <td className="py-3 px-4 text-gray-600">{req.paymentDetails || (req.bankDetails?.bankName + ' - ' + req.bankDetails?.accountNumber?.slice(-4).padStart(8, '*'))}</td>
-                  <td className="py-3 px-4 text-gray-500">{new Date(req.date || req.requestDate || Date.now()).toLocaleDateString()}</td>
-                  <td className="py-3 px-4">
-                    <span className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wider ${
-                      req.status === 'Completed' || req.status === 'approved' 
-                        ? 'bg-emerald-100 text-emerald-800' 
-                        : req.status === 'Rejected' || req.status === 'rejected'
-                        ? 'bg-red-100 text-red-800'
-                        : 'bg-amber-100 text-amber-800'
-                    }`}>
-                      {req.status}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4">
-                    {req.status === 'Pending' || req.status === 'pending' ? (
-                      <div className="flex items-center gap-2">
-                        <button className="p-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors" onClick={() => handleApprovePayout(req.id)} title="Approve">
-                          <Check size={16} />
-                        </button>
-                        <button className="p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors" onClick={() => handleRejectPayout(req.id)} title="Reject">
-                          <X size={16} />
-                        </button>
-                      </div>
-                    ) : (
-                      <span className="text-gray-400 font-mono text-[11px]">{req.transactionId || '-'}</span>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-            {payouts.length === 0 && <tr><td colSpan="6" className="text-center text-gray-500 py-6">No payout requests found.</td></tr>}
+            {payouts.map(p => (
+              <tr key={p.id} className="hover:bg-gray-50/50">
+                <td className="py-3 px-4 font-bold text-gray-900">{p.userName || p.userId}</td>
+                <td className="py-3 px-4 font-extrabold text-emerald-600">₹{p.amount?.toLocaleString('en-IN')}</td>
+                <td className="py-3 px-4 font-mono text-gray-700">{p.upiId || 'user@upi'}</td>
+                <td className="py-3 px-4">
+                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase ${p.status === 'Completed' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                    {p.status}
+                  </span>
+                </td>
+                <td className="py-3 px-4">
+                  {p.status === 'Pending' ? (
+                    <div className="flex gap-2">
+                      <button onClick={() => handleApprovePayout(p.id)} className="px-3 py-1 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 cursor-pointer">Approve</button>
+                      <button onClick={() => handleRejectPayout(p.id)} className="px-3 py-1 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 cursor-pointer">Reject</button>
+                    </div>
+                  ) : (
+                    <span className="font-mono text-gray-400">{p.transactionId || 'PROCESSED'}</span>
+                  )}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
@@ -1044,7 +751,6 @@ const AdminCMS = ({ currentUser, onLogout }) => {
       case 'courses': return renderCourses();
       case 'live': return renderLiveSessions();
       case 'packages': return renderPackages();
-      case 'testimonials': return renderTestimonials();
       case 'users': return renderUsers();
       case 'payouts': return renderPayouts();
       default: return renderDashboard();
@@ -1063,10 +769,7 @@ const AdminCMS = ({ currentUser, onLogout }) => {
         <LiveStudio 
           session={activeStudioSession} 
           onClose={() => setActiveStudioSession(null)} 
-          onUpdateStatus={(id, status) => {
-            store.updateLiveSessionStatus(id, status);
-            loadData();
-          }}
+          onUpdateStatus={handleUpdateLiveStatus}
         />
       )}
     </div>
@@ -1074,4 +777,3 @@ const AdminCMS = ({ currentUser, onLogout }) => {
 };
 
 export default AdminCMS;
-

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import store from '../data/mockStore.js';
 import { 
   Star, Play, Clock, Users, Award, 
-  ChevronRight, ChevronLeft, GraduationCap, Infinity, CheckCircle2, Heart, Zap, Globe, Sparkles, ArrowRight
+  ChevronRight, ChevronLeft, GraduationCap, Infinity, CheckCircle2, Heart, Zap, Globe, Sparkles, ArrowRight, Video, Quote, X, MessageSquare
 } from 'lucide-react';
 import { translations } from '../data/translations';
 
@@ -45,7 +45,11 @@ const Counter = ({ target, duration = 2000, suffix = '' }) => {
 export default function Home({ currentLang = 'EN' }) {
   const courses = store.getCourses();
   const packages = store.getPackages();
+  const testimonials = store.getTestimonials() || [];
+  const videoTestimonials = store.getVideoTestimonials ? store.getVideoTestimonials() : [];
+
   const [favorites, setFavorites] = useState({});
+  const [activeVideoModal, setActiveVideoModal] = useState(null);
 
   const t = translations[currentLang]?.hero || translations.EN.hero;
   const tc = translations[currentLang]?.common || translations.EN.common;
@@ -90,7 +94,6 @@ export default function Home({ currentLang = 'EN' }) {
     }
   ];
 
-  // Auto-advance hero slides every 6s unless hovered
   useEffect(() => {
     if (isPaused) return;
     const interval = setInterval(() => {
@@ -117,13 +120,12 @@ export default function Home({ currentLang = 'EN' }) {
 
   return (
     <div className="bg-[#F5F9FA] min-h-screen">
-      {/* 1. Interactive Full-Screen Hero Carousel (Reference Typography & Vivid Clear Images) */}
+      {/* 1. Interactive Full-Screen Hero Carousel */}
       <section 
         className="relative h-[650px] sm:h-[700px] lg:h-[760px] bg-gray-950 text-white overflow-hidden flex items-center"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
-        {/* Full-Screen Vivid Student Background Images */}
         {heroSlides.map((slide, idx) => (
           <div 
             key={slide.id}
@@ -134,21 +136,17 @@ export default function Home({ currentLang = 'EN' }) {
               alt={slide.part1}
               className="w-full h-full object-cover object-center transform scale-105 transition-transform duration-10000 ease-out" 
             />
-            {/* Subtle Gradient Vignette: Keeps student image bright while making pure white text pop! */}
             <div className="absolute inset-0 bg-gradient-to-r from-gray-950/85 via-gray-950/50 to-transparent" />
             <div className="absolute inset-0 bg-gradient-to-t from-gray-950/70 via-transparent to-transparent" />
           </div>
         ))}
 
-        {/* Hero Content Container - Anchored Left with Refined Compact Typography */}
         <div className="max-w-7xl mx-auto px-4 lg:px-8 relative z-20 w-full py-12 md:py-16">
           <div className="max-w-xl text-left">
-            {/* Tag Badge */}
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-amber-300 text-[10px] font-bold uppercase tracking-wider mb-4 shadow-sm animate-fade-in">
               <Sparkles size={13} className="text-amber-400 animate-pulse" /> {activeSlideData.tag}
             </div>
 
-            {/* Compact Headline Typography */}
             <h1 className="font-heading font-extrabold text-2xl sm:text-4xl lg:text-5xl text-white leading-tight mb-4 drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] animate-fade-in">
               {activeSlideData.part1}
               <span className="font-serif italic font-normal text-amber-400 pr-1.5">
@@ -160,12 +158,10 @@ export default function Home({ currentLang = 'EN' }) {
               </span>
             </h1>
 
-            {/* Compact Subtitle Text */}
             <p className="text-slate-100 text-xs sm:text-sm font-normal leading-relaxed mb-5 max-w-md drop-shadow-md animate-fade-in">
               {activeSlideData.subtitle}
             </p>
 
-            {/* Compact CTA Buttons */}
             <div className="flex flex-wrap items-center gap-3">
               <Link to="/courses" className="bg-[#3B82F6] hover:bg-[#2563EB] text-white font-heading font-bold text-xs tracking-wider uppercase px-6 py-3 rounded-full transition-all shadow-md active:scale-95 inline-flex items-center gap-1.5">
                 {t.getStarted} <ArrowRight size={15} />
@@ -177,13 +173,11 @@ export default function Home({ currentLang = 'EN' }) {
           </div>
         </div>
 
-        {/* Cool Slide Controls: Left & Right Buttons */}
         <div className="absolute inset-y-0 left-4 right-4 z-30 flex items-center justify-between pointer-events-none">
           <button 
             onClick={prevSlide}
             className="w-12 h-12 rounded-full bg-black/40 hover:bg-amber-500 text-white backdrop-blur-md border border-white/20 flex items-center justify-center transition-all shadow-2xl pointer-events-auto active:scale-90 group"
             aria-label="Previous slide"
-            title="Previous Slide"
           >
             <ChevronLeft size={24} className="group-hover:-translate-x-0.5 transition-transform" />
           </button>
@@ -192,13 +186,11 @@ export default function Home({ currentLang = 'EN' }) {
             onClick={nextSlide}
             className="w-12 h-12 rounded-full bg-black/40 hover:bg-amber-500 text-white backdrop-blur-md border border-white/20 flex items-center justify-center transition-all shadow-2xl pointer-events-auto active:scale-90 group"
             aria-label="Next slide"
-            title="Next Slide"
           >
             <ChevronRight size={24} className="group-hover:translate-x-0.5 transition-transform" />
           </button>
         </div>
 
-        {/* Bottom Slide Indicator Dots */}
         <div className="absolute bottom-6 inset-x-0 z-30 flex items-center justify-center gap-3">
           {heroSlides.map((slide, idx) => (
             <button
@@ -269,7 +261,6 @@ export default function Home({ currentLang = 'EN' }) {
                 <div className="card-media-wrapper">
                   <img src={course.thumbnail} alt={course.title} className="card-media-img" />
                   
-                  {/* Top Overlay Badges */}
                   <div className="absolute top-3 right-3 z-10">
                     <button 
                       className="favorite-glass-btn"
@@ -364,11 +355,92 @@ export default function Home({ currentLang = 'EN' }) {
         </div>
       </section>
 
-      {/* 5. Why Choose Us Section */}
-      <section className="py-16 md:py-24 bg-[#F5F9FA]">
+      {/* 5. Video Testimonials Cards Section */}
+      <section className="py-16 md:py-24 bg-[#F5F9FA] border-t border-gray-200 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-extrabold uppercase tracking-widest mb-3 border border-amber-200">
+              <Video size={14} className="text-amber-600" /> Authentic Student Stories
+            </span>
+            <h2 className="font-heading font-extrabold text-3xl md:text-4xl text-gray-900">
+              Watch How Our Students Transformed Their Careers
+            </h2>
+            <p className="text-gray-600 text-sm mt-2">
+              Real face-to-face stories from learners who built production apps, launched ad campaigns, and earned referral income.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
+            {videoTestimonials.map((vt) => (
+              <div 
+                key={vt.id}
+                className="h-[460px] rounded-[32px] overflow-hidden relative group shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2.5 border border-gray-200/80 bg-gray-950 flex flex-col justify-between"
+              >
+                <img 
+                  src={vt.thumbnail} 
+                  alt={vt.name} 
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" 
+                />
+
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/40 to-transparent" />
+
+                <div className="relative z-10 p-4 flex items-start justify-between">
+                  <span className="bg-white/95 backdrop-blur-md text-gray-900 text-[10px] font-extrabold px-3 py-1 rounded-full shadow-md uppercase tracking-wider">
+                    {vt.badge || 'STUDENT STORY'}
+                  </span>
+
+                  <img 
+                    src={vt.avatar} 
+                    alt={vt.name} 
+                    className="w-10 h-10 rounded-full border-2 border-white object-cover shadow-lg" 
+                  />
+                </div>
+
+                <div className="relative z-10 flex items-center justify-center my-auto">
+                  <button 
+                    onClick={() => setActiveVideoModal(vt)}
+                    className="w-16 h-16 rounded-full bg-white/95 text-[#001845] hover:bg-amber-500 hover:text-white flex items-center justify-center shadow-2xl transition-all duration-300 group-hover:scale-110 active:scale-95 border-2 border-white/50"
+                    aria-label="Play video story"
+                  >
+                    <Play size={26} className="ml-1 fill-current" />
+                  </button>
+                </div>
+
+                <div className="relative z-10 p-5 text-left bg-gradient-to-t from-gray-950 via-gray-950/90 to-transparent">
+                  <span className="text-amber-400 text-[11px] font-extrabold uppercase tracking-wider block mb-1">
+                    {vt.courseTag}
+                  </span>
+
+                  <h4 className="font-heading font-extrabold text-xl text-white mb-0.5 leading-snug">
+                    {vt.name}
+                  </h4>
+
+                  <p className="text-gray-300 text-xs mb-3 font-medium">
+                    {vt.role}
+                  </p>
+
+                  <p className="text-slate-200 text-xs font-normal leading-relaxed italic line-clamp-2 mb-4">
+                    "{vt.quote}"
+                  </p>
+
+                  <button 
+                    onClick={() => setActiveVideoModal(vt)}
+                    className="w-full py-2.5 rounded-xl bg-white/10 hover:bg-amber-500 text-white border border-white/20 font-heading font-extrabold text-xs uppercase tracking-wider transition-all backdrop-blur-md flex items-center justify-center gap-1.5 shadow-md"
+                  >
+                    Watch Story <Play size={12} className="fill-white" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 6. Why Choose Us Section */}
+      <section className="py-16 md:py-24 bg-white border-t border-gray-200">
         <div className="max-w-7xl mx-auto px-4 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white p-8 rounded-2xl border border-gray-200/80 shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-[#F5F9FA] p-8 rounded-2xl border border-gray-200/80 shadow-sm hover:shadow-md transition-shadow">
               <div className="w-14 h-14 rounded-2xl bg-primary-container/10 text-primary-container flex items-center justify-center mb-6">
                 <GraduationCap size={32} />
               </div>
@@ -376,7 +448,7 @@ export default function Home({ currentLang = 'EN' }) {
               <p className="text-gray-600 text-sm leading-relaxed">Designed around career transformation, practical software engineering, UI/UX design, AI integration, and digital growth.</p>
             </div>
 
-            <div className="bg-white p-8 rounded-2xl border border-gray-200/80 shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-[#F5F9FA] p-8 rounded-2xl border border-gray-200/80 shadow-sm hover:shadow-md transition-shadow">
               <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center mb-6">
                 <Globe size={32} />
               </div>
@@ -384,7 +456,7 @@ export default function Home({ currentLang = 'EN' }) {
               <p className="text-gray-600 text-sm leading-relaxed">First-of-its-kind seamless Telugu and English switching across every screen, ensuring barrier-free education.</p>
             </div>
 
-            <div className="bg-white p-8 rounded-2xl border border-gray-200/80 shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-[#F5F9FA] p-8 rounded-2xl border border-gray-200/80 shadow-sm hover:shadow-md transition-shadow">
               <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-6">
                 <Award size={32} />
               </div>
@@ -394,6 +466,172 @@ export default function Home({ currentLang = 'EN' }) {
           </div>
         </div>
       </section>
+
+      {/* 7. Creative Bento Grid Student Reviews Section (AFTER Why Choose Us) */}
+      <section className="py-16 md:py-24 bg-[#EBEFEF] border-t border-gray-200 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white text-gray-900 text-xs font-extrabold uppercase tracking-widest mb-3 border border-gray-300 shadow-sm">
+              <MessageSquare size={14} className="text-amber-500" /> Student Reviews & Feedback
+            </span>
+            <h2 className="font-heading font-extrabold text-3xl md:text-4xl text-gray-900">
+              What Our Indian Teenage Learners Say
+            </h2>
+            <p className="text-gray-600 text-sm mt-2">
+              Real feedback from Indian students mastering tech, AI tools, and fullstack web development.
+            </p>
+          </div>
+
+          {/* Asymmetric Bento Masonry Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
+            
+            {/* COLUMN 1 */}
+            <div className="space-y-6">
+              {/* Card 1: Top Cutout Circular Avatar Card */}
+              <div className="bg-white rounded-3xl p-6 shadow-md border border-gray-200/80 relative pt-10">
+                <Quote size={28} className="text-gray-800 fill-gray-800 mb-3" />
+                <p className="text-gray-700 text-xs sm:text-sm font-medium leading-relaxed mb-6">
+                  Learning React & Node on ClassConnect allowed me to build real-world web apps in just 60 days alongside senior PRO mentors.
+                </p>
+                <div className="flex items-center gap-3 pt-4 border-t border-gray-100">
+                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-md flex-shrink-0">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop" alt="Rajesh Kumar" className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <h5 className="font-heading font-extrabold text-xs text-gray-900">Rajesh Kumar</h5>
+                    <span className="text-[11px] text-gray-500">@rajesh.tech</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 2: Speech Bubble Card with 3 Circular Avatars below */}
+              <div className="relative">
+                <div className="bg-white rounded-3xl p-6 shadow-md border border-gray-200/80 text-center">
+                  <h4 className="font-heading font-extrabold text-lg text-gray-900 mb-2">I was very impressed!</h4>
+                  <p className="text-gray-600 text-xs leading-relaxed mb-4">
+                    From setting up Google Ads campaigns to deploying Fullstack projects, the live mentorship in Telugu was top tier.
+                  </p>
+                  <span className="text-[11px] font-bold text-gray-400">Venkatesh & Team</span>
+                </div>
+                {/* 3 Floating Avatar Circles overlapping below */}
+                <div className="flex justify-center -mt-3 gap-2 relative z-10">
+                  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop" alt="Student 1" className="w-10 h-10 rounded-full border-2 border-white shadow-md object-cover" />
+                  <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop" alt="Student 2" className="w-10 h-10 rounded-full border-2 border-white shadow-md object-cover" />
+                  <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop" alt="Student 3" className="w-10 h-10 rounded-full border-2 border-white shadow-md object-cover" />
+                </div>
+              </div>
+            </div>
+
+            {/* COLUMN 2 */}
+            <div className="space-y-6">
+              {/* Card 3: Center Rating & Headline Card */}
+              <div className="bg-white rounded-3xl p-6 shadow-md border border-gray-200/80 text-center relative pb-10">
+                <div className="flex justify-center gap-1 text-amber-400 mb-3">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star key={i} size={18} fill="#F59E0B" color="#F59E0B" />
+                  ))}
+                </div>
+                <h4 className="font-heading font-extrabold text-xl text-gray-900 mb-3">I really appreciate!!</h4>
+                <p className="text-gray-600 text-xs sm:text-sm font-medium leading-relaxed mb-4">
+                  The bilingual Telugu & English live masterclasses made complex backend concepts so easy to understand!
+                </p>
+                <div className="text-xs font-bold text-gray-900">Sneha Reddy</div>
+                <div className="text-[11px] text-gray-400">@sneha_dev</div>
+                <Quote size={28} className="text-gray-800 fill-gray-800 absolute bottom-4 right-4 opacity-90" />
+              </div>
+
+              {/* Card 4: Top Centered Avatar Badge Card */}
+              <div className="bg-white rounded-3xl p-6 shadow-md border border-gray-200/80 text-center relative pt-10 mt-8">
+                <div className="w-14 h-14 rounded-full border-4 border-white shadow-md overflow-hidden absolute -top-7 left-1/2 -translate-x-1/2">
+                  <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop" alt="Ananya Varma" className="w-full h-full object-cover" />
+                </div>
+                <h5 className="font-heading font-extrabold text-sm text-gray-900 mb-1">Good Job!</h5>
+                <div className="flex justify-center gap-1 text-amber-400 mb-2">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star key={i} size={14} fill="#F59E0B" color="#F59E0B" />
+                  ))}
+                </div>
+                <p className="text-gray-600 text-xs leading-relaxed italic">
+                  "The direct daily referral commission payout system is 100% transparent and instant!"
+                </p>
+              </div>
+            </div>
+
+            {/* COLUMN 3 */}
+            <div className="space-y-6">
+              {/* Card 5: Full Portrait Indian Student Image Card */}
+              <div className="bg-white rounded-3xl p-5 shadow-md border border-gray-200/80 overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&h=700&fit=crop" 
+                  alt="Indian Student Learning" 
+                  className="w-full h-56 object-cover rounded-2xl mb-4" 
+                />
+                <p className="text-gray-700 text-xs font-medium leading-relaxed mb-3">
+                  Outcome-based practical training that actually helps you land software engineering internships.
+                </p>
+                <div className="text-right font-serif italic text-amber-600 font-bold text-sm">
+                  Kavya Sharma
+                </div>
+              </div>
+
+              {/* Card 6: Horizontal Split Card */}
+              <div className="bg-white rounded-3xl p-4 shadow-md border border-gray-200/80 flex items-center gap-4">
+                <img 
+                  src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&h=300&fit=crop" 
+                  alt="Harish Varma" 
+                  className="w-24 h-28 object-cover rounded-2xl flex-shrink-0" 
+                />
+                <div>
+                  <Quote size={18} className="text-gray-800 fill-gray-800 mb-1" />
+                  <p className="text-gray-700 text-[11px] font-medium leading-tight mb-2">
+                    ClassConnect gave me the confidence to launch my own freelance agency while still in college.
+                  </p>
+                  <div className="text-xs font-bold text-gray-900">Harish Varma</div>
+                  <div className="text-[10px] text-gray-500">Co-Founder DevStudio</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* Interactive Video Story Modal */}
+      {activeVideoModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">
+          <div className="bg-gray-950 text-white rounded-3xl border border-white/20 p-6 max-w-3xl w-full shadow-2xl relative overflow-hidden">
+            <button 
+              onClick={() => setActiveVideoModal(null)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-20"
+              aria-label="Close video player"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="flex items-center gap-3 mb-4">
+              <img src={activeVideoModal.avatar || activeVideoModal.thumbnail} alt={activeVideoModal.name} className="w-10 h-10 rounded-full border border-white/30 object-cover" />
+              <div>
+                <h4 className="font-heading font-extrabold text-lg text-white">{activeVideoModal.name}</h4>
+                <span className="text-xs text-amber-400 font-semibold">{activeVideoModal.courseTag || 'ClassConnect Story'}</span>
+              </div>
+            </div>
+
+            <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-black border border-white/10 mb-4">
+              <iframe
+                src={activeVideoModal.videoUrl}
+                title={activeVideoModal.name}
+                className="w-full h-full border-0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+
+            <p className="text-xs md:text-sm text-gray-300 italic">
+              "{activeVideoModal.quote}"
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
