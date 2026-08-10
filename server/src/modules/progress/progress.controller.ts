@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import mongoose from 'mongoose';
 import { UserProgress, IUserProgress } from './progress.model.js';
-import { Certificate } from '../certificates/certificate.model.ts';
+import { Certificate } from '../certificates/certificate.model.js';
 import { Course } from '../courses/course.model.js';
 import { AuthenticatedRequest } from '../../middleware/auth.middleware.js';
 import { PDFService } from '../../services/pdf.service.js';
