@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import { env } from '../config/env.js';
+import { Logger } from '../utils/logger.js';
 
 export interface BunnyUploadResult {
   url: string;
@@ -53,7 +54,7 @@ export class BunnyService {
         cdnUrl,
       };
     } catch (error) {
-      console.warn('[BunnyService] Falling back to mock CDN URL due to upload error:', (error as Error).message);
+      Logger.warn('[BunnyService] Falling back to mock CDN URL due to upload error:', (error as Error).message);
       const fallbackUrl = `${env.BUNNY_STORAGE_CDN_URL}/${destinationPath}`;
       return {
         url: fallbackUrl,

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import logger from '../utils/logger';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -65,7 +66,7 @@ export default function AdminDashboard() {
         fetchDashboardData();
       }
     } catch (err) {
-      console.warn('Mark read warning:', err);
+      logger.warn('Mark read warning:', err);
     }
   };
 

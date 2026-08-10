@@ -1,5 +1,6 @@
 import Redis from 'ioredis';
 import { env } from './env.js';
+import { Logger } from '../utils/logger.js';
 
 let redisClient: Redis | null = null;
 
@@ -19,14 +20,14 @@ export const connectRedis = async (): Promise<boolean> => {
     });
 
     redisClient.on('error', (err) => {
-      console.warn('[Redis] Connection warning:', err.message);
+      Logger.warn('[Redis] Connection warning:', err.message);
     });
 
     await redisClient.connect();
-    console.log('[Redis] Connected to Redis successfully.');
+    Logger.info('[Redis] Connected to Redis successfully.');
     return true;
   } catch (error) {
-    console.warn('[Redis] Redis connection failed or offline. Operating in fallback mode:', (error as Error).message);
+    Logger.warn('[Redis] Redis connection failed or offline. Operating in fallback mode:', (error as Error).message);
     return false;
   }
 };

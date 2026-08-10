@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { env } from './env.js';
+import { Logger } from '../utils/logger.js';
 
 export const connectDatabase = async (): Promise<boolean> => {
   if (process.env.NODE_ENV === 'test') {
@@ -9,10 +10,10 @@ export const connectDatabase = async (): Promise<boolean> => {
     await mongoose.connect(env.MONGO_URI, {
       serverSelectionTimeoutMS: 3000,
     });
-    console.log('[Database] Connected to MongoDB successfully.');
+    Logger.info('[Database] Connected to MongoDB successfully.');
     return true;
   } catch (error) {
-    console.warn('[Database] MongoDB connection failed or offline. Operating in fallback mode:', (error as Error).message);
+    Logger.warn('[Database] MongoDB connection failed or offline. Operating in fallback mode:', (error as Error).message);
     return false;
   }
 };

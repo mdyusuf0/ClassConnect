@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getCourseDetailApi, getCourseProgressApi, updateLessonProgressApi, downloadCertificateApi } from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import logger from '../utils/logger';
 import {
   PlayCircle,
   Lock,
@@ -116,7 +117,7 @@ export default function CoursePlayer() {
           }
         }
       } catch (err) {
-        console.warn('Progress update warning:', err);
+        logger.warn('Progress update warning:', err);
       }
     }
   };

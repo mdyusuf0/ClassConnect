@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getLiveSessionDetailApi, getChatMessagesApi, sendChatMessageApi } from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import logger from '../utils/logger';
 import { Radio, Send, MessageSquare, Shield, User, ArrowLeft, CheckCircle2, AlertCircle, BookOpen } from 'lucide-react';
 
 export default function LiveRoom() {
@@ -40,7 +41,7 @@ export default function LiveRoom() {
         setMessages(res.messages);
       }
     } catch (err) {
-      console.warn('Live chat fetch warning:', err);
+      logger.warn('Live chat fetch warning:', err);
     }
   };
 

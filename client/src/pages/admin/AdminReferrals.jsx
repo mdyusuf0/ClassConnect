@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import logger from '../../utils/logger';
 import {
   getAdminCoursesApi,
   getAdminReferralSettingsApi,
@@ -35,7 +36,7 @@ export default function AdminReferrals() {
         setSelectedCourseId(res.courses[0]._id || res.courses[0].id);
       }
     } catch (err) {
-      console.warn('Failed to load courses for referral settings:', err);
+      logger.warn('Failed to load courses for referral settings:', err);
     }
   };
 
@@ -47,7 +48,7 @@ export default function AdminReferrals() {
         setSetting(res.setting);
       }
     } catch (err) {
-      console.warn('Failed to load course referral setting:', err);
+      logger.warn('Failed to load course referral setting:', err);
     }
   };
 

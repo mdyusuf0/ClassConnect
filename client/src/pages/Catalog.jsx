@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getCoursesApi } from '../api/client';
+import logger from '../utils/logger';
 import { Search, Filter, BookOpen, Award, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
 
 const CATEGORIES = ['All', 'Web Development', 'Artificial Intelligence', 'Data Science', 'Mobile App Development', 'Cybersecurity'];
@@ -25,7 +26,7 @@ export default function Catalog() {
         setCourses(res.courses);
       }
     } catch (err) {
-      console.error('Failed to fetch public catalog:', err);
+      logger.error('Failed to fetch public catalog:', err);
     } finally {
       setLoading(false);
     }

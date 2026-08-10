@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { loginApi, registerApi, getMeApi } from '../api/client';
+import logger from '../utils/logger';
 
 const AuthContext = createContext();
 
@@ -21,7 +22,7 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem('classconnect_user', JSON.stringify(res.user));
           }
         } catch (err) {
-          console.warn('Session expired or invalid token');
+          logger.warn('Session expired or invalid token');
           logout();
         }
       }
