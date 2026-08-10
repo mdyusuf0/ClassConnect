@@ -760,9 +760,179 @@ const store = {
     return ['All', ...new Set(courses.map(c => c.category))];
   },
 
+  // ---- Bunny CDN Helpers ----
+  BUNNY_STORAGE_CDN: 'https://class-connect.b-cdn.net',
+  BUNNY_STREAM_CDN: 'https://vz-e90d4726-817.b-cdn.net',
+
+  formatBunnyStorageUrl(path, defaultSubfolder = 'courses') {
+    if (!path) return `${this.BUNNY_STORAGE_CDN}/${defaultSubfolder}/default.jpg`;
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+    return `${this.BUNNY_STORAGE_CDN}/${cleanPath}`;
+  },
+
+  formatBunnyStreamUrl(path) {
+    if (!path) return `${this.BUNNY_STREAM_CDN}/unit1/lesson1_intro.mp4`;
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+    return `${this.BUNNY_STREAM_CDN}/${cleanPath}`;
+  },
+
+  // ---- Unit-wise Lecture Management ----
+  addLectureToCourse(courseId, unitNumber, unitTitle, lectureData) {
+    const data = this.getData();
+    const course = data.courses.find(c => c.id === courseId);
+    if (!course) return null;
+
+    if (!course.units) course.units = [];
+    
+    let unit = course.units.find(u => u.unitNumber === parseInt(unitNumber));
+    if (!unit) {
+      unit = {
+        unitNumber: parseInt(unitNumber),
+        title: unitTitle || `Unit ${unitNumber}`,
+        lessons: []
+      };
+      course.units.push(unit);
+    }
+
+    const newLesson = {
+      id: 'les-' + Date.now(),
+      title: lectureData.title,
+      description: lectureData.description || '',
+      duration: lectureData.duration || '15:00',
+      isFreePreview: !!lectureData.isFreePreview,
+      videoUrl: this.formatBunnyStreamUrl(lectureData.videoUrl),
+      thumbnailUrl: this.formatBunnyStorageUrl(lectureData.thumbnailUrl, 'lessons'),
+      createdAt: new Date().toISOString()
+    };
+
+    unit.lessons.push(newLesson);
+    course.lessons = (course.lessons || 0) + 1;
+
+    saveData(data);
+    return newLesson;
+  },
+
+  deleteLectureFromCourse(courseId, lessonId) {
+    const data = this.getData();
+    const course = data.courses.find(c => c.id === courseId);
+    if (!course || !course.units) return false;
+
+    let removed = false;
+    course.units.forEach(unit => {
+      const idx = unit.lessons.findIndex(l => l.id === lessonId);
+      if (idx > -1) {
+        unit.lessons.splice(idx, 1);
+        removed = true;
+      }
+    });
+
+    if (removed) {
+      course.lessons = Math.max(0, (course.lessons || 1) - 1);
+      saveData(data);
+    }
+    return removed;
+  },
+
+  // ---- Live Sessions Management ----
+  getLiveSessions() {
+    const data = this.getData();
+    if (!data.liveSessions) {
+      data.liveSessions = [
+        {
+          id: 'live-1',
+          title: 'Fullstack MERN Live Masterclass & Q&A',
+          instructor: 'Senior PRO Mentors',
+          courseId: 'c1',
+          scheduledAt: new Date(Date.now() + 86400000).toISOString(),
+          status: 'SCHEDULED',
+          streamUrl: `${this.BUNNY_STREAM_CDN}/live/mern_masterclass.mp4`,
+          coverImage: `${this.BUNNY_STORAGE_CDN}/live/mern-live-thumb.jpg`,
+          recordingUrl: `${this.BUNNY_STREAM_CDN}/recordings/mern_recording.mp4`
+        }
+      ];
+      saveData(data);
+    }
+    return data.liveSessions;
+  },
+
+  addLiveSession(sessionData) {
+    const data = this.getData();
+    if (!data.liveSessions) data.liveSessions = [];
+
+    const newSession = {
+      id: 'live-' + Date.now(),
+      title: sessionData.title,
+      instructor: sessionData.instructor || 'ClassConnect Mentors',
+      courseId: sessionData.courseId || '',
+      scheduledAt: sessionData.scheduledAt || new Date().toISOString(),
+      status: sessionData.status || 'SCHEDULED',
+      streamUrl: this.formatBunnyStreamUrl(sessionData.streamUrl || 'live/session_stream.mp4'),
+      coverImage: this.formatBunnyStorageUrl(sessionData.coverImage || 'live/default.jpg', 'live'),
+      recordingUrl: sessionData.recordingUrl ? this.formatBunnyStreamUrl(sessionData.recordingUrl) : '',
+      createdAt: new Date().toISOString()
+    };
+
+    data.liveSessions.unshift(newSession);
+    saveData(data);
+    return newSession;
+  },
+
+  updateLiveSessionStatus(id, status) {
+    const data = this.getData();
+    if (!data.liveSessions) return null;
+    const session = data.liveSessions.find(s => s.id === id);
+    if (session) {
+      session.status = status;
+      saveData(data);
+    }
+    return session;
+  },
+
+  deleteLiveSession(id) {
+    const data = this.getData();
+    if (!data.liveSessions) return false;
+    data.liveSessions = data.liveSessions.filter(s => s.id !== id);
+    saveData(data);
+    return true;
+  },
+
+  // ---- Course Cover & Pricing Updates ----
+  updateCourseCover(id, coverUrl) {
+    const data = this.getData();
+    const course = data.courses.find(c => c.id === id);
+    if (course) {
+      course.thumbnail = this.formatBunnyStorageUrl(coverUrl, 'courses');
+      saveData(data);
+    }
+    return course;
+  },
+
   addCourse(course) {
     const data = this.getData();
-    const newCourse = { ...course, id: 'c' + Date.now() };
+    const newCourse = { 
+      ...course, 
+      id: 'c' + Date.now(),
+      thumbnail: this.formatBunnyStorageUrl(course.thumbnail, 'courses'),
+      units: course.units || [
+        {
+          unitNumber: 1,
+          title: 'Unit 1: Fundamentals & Getting Started',
+          lessons: [
+            {
+              id: 'les-init-1',
+              title: 'Course Introduction & Environment Setup',
+              description: 'Overview of the syllabus and setting up tools.',
+              duration: '10:00',
+              isFreePreview: true,
+              videoUrl: `${this.BUNNY_STREAM_CDN}/unit1/lesson1_intro.mp4`,
+              thumbnailUrl: `${this.BUNNY_STORAGE_CDN}/lessons/intro-thumb.jpg`
+            }
+          ]
+        }
+      ]
+    };
     data.courses.push(newCourse);
     saveData(data);
     return newCourse;
@@ -772,6 +942,9 @@ const store = {
     const data = this.getData();
     const idx = data.courses.findIndex(c => c.id === id);
     if (idx > -1) {
+      if (updates.thumbnail) {
+        updates.thumbnail = this.formatBunnyStorageUrl(updates.thumbnail, 'courses');
+      }
       data.courses[idx] = { ...data.courses[idx], ...updates };
       saveData(data);
     }
@@ -781,8 +954,8 @@ const store = {
     const data = this.getData();
     const idx = data.courses.findIndex(c => c.id === id);
     if (idx > -1) {
-      data.courses[idx].price = price;
-      data.courses[idx].originalPrice = originalPrice;
+      data.courses[idx].price = parseFloat(price);
+      data.courses[idx].originalPrice = parseFloat(originalPrice);
       saveData(data);
     }
   },

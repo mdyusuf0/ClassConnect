@@ -15,7 +15,9 @@ import {
   Menu,
   X,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  Radio,
+  Play
 } from 'lucide-react';
 import store from '../data/mockStore';
 
@@ -27,6 +29,7 @@ const Dashboard = ({ currentUser, onLogout }) => {
   
   const [referrals, setReferrals] = useState([]);
   const [enrolledPackage, setEnrolledPackage] = useState(null);
+  const [liveSessions, setLiveSessions] = useState([]);
   
   const [bankDetails, setBankDetails] = useState({
     bankName: '',
@@ -45,6 +48,7 @@ const Dashboard = ({ currentUser, onLogout }) => {
   useEffect(() => {
     if (currentUser) {
       setReferrals(store.getReferralsByUser(currentUser.id));
+      setLiveSessions(store.getLiveSessions ? store.getLiveSessions() : []);
       if (currentUser.enrolledPackage) {
         setEnrolledPackage(store.getPackageById(currentUser.enrolledPackage));
       }
@@ -96,6 +100,7 @@ const Dashboard = ({ currentUser, onLogout }) => {
   const navItems = [
     { id: 'overview', label: 'Overview', icon: <Home size={18} /> },
     { id: 'courses', label: 'My Courses', icon: <BookOpen size={18} /> },
+    { id: 'live', label: 'Live Masterclasses', icon: <Radio size={18} /> },
     { id: 'referrals', label: 'Referrals', icon: <Users size={18} /> },
     { id: 'bank', label: 'Bank Details', icon: <Banknote size={18} /> },
     { id: 'settings', label: 'Settings', icon: <Settings size={18} /> }
@@ -347,6 +352,58 @@ const Dashboard = ({ currentUser, onLogout }) => {
                   <Link to="/packages" className="inline-flex px-6 py-3 bg-primary-container text-white font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md">
                     Browse Packages
                   </Link>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* LIVE SESSIONS TAB */}
+          {activeTab === 'live' && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="font-heading font-extrabold text-2xl text-gray-900">Live Masterclasses</h2>
+                <p className="text-xs text-gray-500 mt-1">Interactive live broadcasts, Q&A sessions, and recorded masterclasses delivered via Bunny Stream CDN.</p>
+              </div>
+
+              {liveSessions.length === 0 ? (
+                <div className="bg-white rounded-2xl p-12 text-center border border-gray-200 shadow-sm">
+                  <Radio size={36} className="mx-auto text-gray-400 mb-3" />
+                  <p className="text-sm font-semibold text-gray-500">No live sessions scheduled right now.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {liveSessions.map(session => (
+                    <div key={session.id} className="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-sm flex flex-col justify-between space-y-4">
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider ${
+                            session.status === 'LIVE_NOW' ? 'bg-red-500 text-white animate-pulse' : 'bg-blue-100 text-blue-800'
+                          }`}>
+                            <Radio size={12} />
+                            {session.status === 'LIVE_NOW' ? 'LIVE NOW' : session.status}
+                          </span>
+                          <span className="text-[11px] font-medium text-gray-500">{new Date(session.scheduledAt).toLocaleDateString()}</span>
+                        </div>
+
+                        <h3 className="font-heading font-extrabold text-lg text-gray-900">{session.title}</h3>
+                        <p className="text-xs font-medium text-gray-600">Instructor: <strong className="text-gray-900">{session.instructor}</strong></p>
+
+                        <div className="bg-gray-50 p-3 rounded-xl border border-gray-200 text-xs font-mono text-amber-700 truncate">
+                          Bunny Stream: {session.streamUrl}
+                        </div>
+                      </div>
+
+                      <a 
+                        href={session.streamUrl} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="w-full py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl shadow transition-all flex items-center justify-center gap-2"
+                      >
+                        <Play size={16} />
+                        <span>{session.status === 'LIVE_NOW' ? 'Join Live Stream' : 'Watch Recording'}</span>
+                      </a>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
