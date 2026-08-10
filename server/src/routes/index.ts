@@ -5,6 +5,7 @@ import courseRoutes from '../modules/courses/course.routes.js';
 import progressRoutes from '../modules/progress/progress.routes.js';
 import paymentRoutes from '../modules/payments/payment.routes.js';
 import referralRoutes from '../modules/referrals/referral.routes.js';
+import liveRoutes from '../modules/live/live.routes.js';
 import { authenticate, authorize } from '../middleware/auth.middleware.js';
 
 const router = Router();
@@ -15,6 +16,7 @@ router.use('/', courseRoutes);
 router.use('/', progressRoutes);
 router.use('/', paymentRoutes);
 router.use('/', referralRoutes);
+router.use('/', liveRoutes);
 
 // Role Protection Test Endpoints
 router.get('/admin/dashboard-stats', authenticate, authorize('admin'), (_req, res) => {

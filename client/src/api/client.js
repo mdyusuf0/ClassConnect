@@ -188,4 +188,40 @@ export const processAdminPayoutApi = async (requestId, processData) => {
   return res.data;
 };
 
+// Live Classes & Chat API
+export const scheduleLiveClassApi = async (sessionData) => {
+  const res = await api.post('/admin/live/schedule', sessionData);
+  return res.data;
+};
+
+export const getAdminLiveClassesApi = async () => {
+  const res = await api.get('/admin/live/classes');
+  return res.data;
+};
+
+export const updateLiveStatusApi = async (sessionId, statusData) => {
+  const res = await api.put(`/admin/live/sessions/${sessionId}/status`, statusData);
+  return res.data;
+};
+
+export const getStudentLiveClassesApi = async (courseId) => {
+  const res = await api.get(`/live/courses/${courseId}`);
+  return res.data;
+};
+
+export const getLiveSessionDetailApi = async (sessionId) => {
+  const res = await api.get(`/live/sessions/${sessionId}`);
+  return res.data;
+};
+
+export const sendChatMessageApi = async (sessionId, chatData) => {
+  const res = await api.post(`/live/sessions/${sessionId}/chat`, chatData);
+  return res.data;
+};
+
+export const getChatMessagesApi = async (sessionId) => {
+  const res = await api.get(`/live/sessions/${sessionId}/chat`);
+  return res.data;
+};
+
 export default api;

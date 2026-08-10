@@ -1,11 +1,13 @@
 import { createApp } from './app.js';
 import { env } from './config/env.js';
 import { connectDatabase } from './config/database.js';
+import { connectRedis } from './config/redis.js';
 
 const startServer = async () => {
-  await connectDatabase();
-  const app = createApp();
+  // Use Promise.all to initialize database (MongoDB) and Redis connection instances simultaneously
+  await Promise.all([connectDatabase(), connectRedis()]);
 
+  const app = createApp();
   const PORT = parseInt(env.PORT, 10);
   app.listen(PORT, () => {
     console.log(`[ClassConnect API] Server running on http://localhost:${PORT}`);

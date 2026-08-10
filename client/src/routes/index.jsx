@@ -10,12 +10,14 @@ import ResetPassword from '../pages/ResetPassword';
 import StudentDashboard from '../pages/StudentDashboard';
 import CoursePlayer from '../pages/CoursePlayer';
 import ReferralDashboard from '../pages/ReferralDashboard';
+import LiveRoom from '../pages/LiveRoom';
 import AdminDashboard from '../pages/AdminDashboard';
 import AdminCourseList from '../pages/admin/AdminCourseList';
 import AdminCourseForm from '../pages/admin/AdminCourseForm';
 import AdminUnitLessonManager from '../pages/admin/AdminUnitLessonManager';
 import AdminPayments from '../pages/admin/AdminPayments';
 import AdminReferrals from '../pages/admin/AdminReferrals';
+import AdminLiveClasses from '../pages/admin/AdminLiveClasses';
 import { RequireRole } from '../components/ProtectedRoute';
 
 export default function AppRoutes() {
@@ -46,6 +48,14 @@ export default function AppRoutes() {
         element={
           <RequireRole allowedRoles={['student', 'admin']}>
             <CoursePlayer />
+          </RequireRole>
+        }
+      />
+      <Route
+        path="/live-room/:sessionId"
+        element={
+          <RequireRole allowedRoles={['student', 'admin']}>
+            <LiveRoom />
           </RequireRole>
         }
       />
@@ -112,6 +122,14 @@ export default function AppRoutes() {
         element={
           <RequireRole allowedRoles={['admin']}>
             <AdminReferrals />
+          </RequireRole>
+        }
+      />
+      <Route
+        path="/admin/live"
+        element={
+          <RequireRole allowedRoles={['admin']}>
+            <AdminLiveClasses />
           </RequireRole>
         }
       />
