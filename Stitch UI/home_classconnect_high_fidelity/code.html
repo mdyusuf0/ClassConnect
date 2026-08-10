@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ClassConnect - Skills that Build Success</title>
+<!-- Google Fonts & Material Icons -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "background": "#fcf9f8",
+                    "on-tertiary-fixed-variant": "#324f00",
+                    "surface-variant": "#e5e2e1",
+                    "on-secondary": "#ffffff",
+                    "on-surface": "#1b1b1b",
+                    "action-blue": "#5C88D5",
+                    "secondary": "#a93100",
+                    "on-primary": "#ffffff",
+                    "surface-container": "#f0eded",
+                    "surface": "#fcf9f8",
+                    "on-primary-container": "#7995e0",
+                    "outline": "#747782",
+                    "secondary-container": "#d44000",
+                    "on-primary-fixed": "#001847",
+                    "error-container": "#ffdad6",
+                    "on-background": "#1b1b1b",
+                    "secondary-fixed-dim": "#ffb59e",
+                    "on-tertiary-container": "#74a52a",
+                    "surface-tint": "#3e5ca2",
+                    "tertiary-fixed": "#bdf370",
+                    "primary-fixed-dim": "#b1c5ff",
+                    "outline-variant": "#c4c6d2",
+                    "surface-container-lowest": "#ffffff",
+                    "on-surface-variant": "#444651",
+                    "on-error": "#ffffff",
+                    "primary-container": "#002b70",
+                    "surface-container-highest": "#e5e2e1",
+                    "inverse-on-surface": "#f3f0ef",
+                    "secondary-fixed": "#ffdbd0",
+                    "on-secondary-fixed-variant": "#842500",
+                    "inverse-primary": "#b1c5ff",
+                    "primary-fixed": "#dae2ff",
+                    "inverse-surface": "#303030",
+                    "success-green": "#76A72C",
+                    "surface-alt": "#F5F9FA",
+                    "error": "#ba1a1a",
+                    "on-secondary-fixed": "#3a0b00",
+                    "surface-bright": "#fcf9f8",
+                    "border-muted": "#DEDEDE",
+                    "primary": "#001845",
+                    "on-primary-fixed-variant": "#244488",
+                    "tertiary": "#101e00",
+                    "on-tertiary": "#ffffff",
+                    "tertiary-container": "#203500",
+                    "on-secondary-container": "#fffbff",
+                    "on-tertiary-fixed": "#111f00",
+                    "surface-dim": "#dcd9d9",
+                    "surface-container-high": "#eae7e7",
+                    "surface-container-low": "#f6f3f2",
+                    "tertiary-fixed-dim": "#a2d657",
+                    "on-error-container": "#93000a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "margin-mobile": "16px",
+                    "base": "4px",
+                    "xl": "40px",
+                    "xs": "4px",
+                    "gutter": "24px",
+                    "margin-desktop": "64px",
+                    "lg": "24px",
+                    "md": "16px",
+                    "sm": "8px"
+            },
+            "fontFamily": {
+                    "label-md": [
+                            "Inter"
+                    ],
+                    "body-lg": [
+                            "Inter"
+                    ],
+                    "caption": [
+                            "Inter"
+                    ],
+                    "title-md": [
+                            "Hanken Grotesk"
+                    ],
+                    "headline-md": [
+                            "Hanken Grotesk"
+                    ],
+                    "display-lg": [
+                            "Hanken Grotesk"
+                    ],
+                    "body-md": [
+                            "Inter"
+                    ],
+                    "headline-lg": [
+                            "Hanken Grotesk"
+                    ],
+                    "headline-lg-mobile": [
+                            "Hanken Grotesk"
+                    ]
+            },
+            "fontSize": {
+                    "label-md": [
+                            "12px",
+                            {
+                                    "lineHeight": "16px",
+                                    "letterSpacing": "0.05em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-lg": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "caption": [
+                            "11px",
+                            {
+                                    "lineHeight": "14px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "title-md": [
+                            "18px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "headline-md": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "display-lg": [
+                            "48px",
+                            {
+                                    "lineHeight": "56px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "body-md": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "headline-lg": [
+                            "32px",
+                            {
+                                    "lineHeight": "40px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-lg-mobile": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "fontWeight": "600"
+                            }
+                    ]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1;
+        }
+        
+        .shadow-ambient {
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.08);
+        }
+        
+        .shadow-modal {
+            box-shadow: 0px 5px 40px rgba(0, 0, 0, 0.16);
+        }
+    </style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}[type='text'],input:where(:not([type])),[type='email'],[type='url'],[type='password'],[type='number'],[type='date'],[type='datetime-local'],[type='month'],[type='search'],[type='tel'],[type='time'],[type='week'],[multiple],textarea,select{-webkit-appearance:none;appearance:none;background-color:#fff;border-color:#6b7280;border-width:1px;border-radius:0px;padding-top:0.5rem;padding-right:0.75rem;padding-bottom:0.5rem;padding-left:0.75rem;font-size:1rem;line-height:1.5rem;--tw-shadow:0 0 #0000;}[type='text']:focus, input:where(:not([type])):focus, [type='email']:focus, [type='url']:focus, [type='password']:focus, [type='number']:focus, [type='date']:focus, [type='datetime-local']:focus, [type='month']:focus, [type='search']:focus, [type='tel']:focus, [type='time']:focus, [type='week']:focus, [multiple]:focus, textarea:focus, select:focus{outline:2px solid transparent;outline-offset:2px;--tw-ring-inset:var(--tw-empty,/*!*/ /*!*/);--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:#2563eb;--tw-ring-offset-shadow:var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow:var(--tw-ring-inset) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);border-color:#2563eb}input::placeholder,textarea::placeholder{color:#6b7280;opacity:1}::-webkit-datetime-edit-fields-wrapper{padding:0}::-webkit-date-and-time-value{min-height:1.5em;text-align:inherit}::-webkit-datetime-edit{display:inline-flex}::-webkit-datetime-edit,::-webkit-datetime-edit-year-field,::-webkit-datetime-edit-month-field,::-webkit-datetime-edit-day-field,::-webkit-datetime-edit-hour-field,::-webkit-datetime-edit-minute-field,::-webkit-datetime-edit-second-field,::-webkit-datetime-edit-millisecond-field,::-webkit-datetime-edit-meridiem-field{padding-top:0;padding-bottom:0}select{background-image:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");background-position:right 0.5rem center;background-repeat:no-repeat;background-size:1.5em 1.5em;padding-right:2.5rem;print-color-adjust:exact}[multiple],[size]:where(select:not([size="1"])){background-image:initial;background-position:initial;background-repeat:unset;background-size:initial;padding-right:0.75rem;print-color-adjust:unset}[type='checkbox'],[type='radio']{-webkit-appearance:none;appearance:none;padding:0;print-color-adjust:exact;display:inline-block;vertical-align:middle;background-origin:border-box;-webkit-user-select:none;user-select:none;flex-shrink:0;height:1rem;width:1rem;color:#2563eb;background-color:#fff;border-color:#6b7280;border-width:1px;--tw-shadow:0 0 #0000}[type='checkbox']{border-radius:0px}[type='radio']{border-radius:100%}[type='checkbox']:focus,[type='radio']:focus{outline:2px solid transparent;outline-offset:2px;--tw-ring-inset:var(--tw-empty,/*!*/ /*!*/);--tw-ring-offset-width:2px;--tw-ring-offset-color:#fff;--tw-ring-color:#2563eb;--tw-ring-offset-shadow:var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow:var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)}[type='checkbox']:checked,[type='radio']:checked{border-color:transparent;background-color:currentColor;background-size:100% 100%;background-position:center;background-repeat:no-repeat}[type='checkbox']:checked{background-image:url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");}@media (forced-colors: active) {[type='checkbox']:checked{-webkit-appearance:auto;appearance:auto}}[type='radio']:checked{background-image:url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3ccircle cx='8' cy='8' r='3'/%3e%3c/svg%3e");}@media (forced-colors: active) {[type='radio']:checked{-webkit-appearance:auto;appearance:auto}}[type='checkbox']:checked:hover,[type='checkbox']:checked:focus,[type='radio']:checked:hover,[type='radio']:checked:focus{border-color:transparent;background-color:currentColor}[type='checkbox']:indeterminate{background-image:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 16 16'%3e%3cpath stroke='white' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M4 8h8'/%3e%3c/svg%3e");border-color:transparent;background-color:currentColor;background-size:100% 100%;background-position:center;background-repeat:no-repeat;}@media (forced-colors: active) {[type='checkbox']:indeterminate{-webkit-appearance:auto;appearance:auto}}[type='checkbox']:indeterminate:hover,[type='checkbox']:indeterminate:focus{border-color:transparent;background-color:currentColor}[type='file']{background:unset;border-color:inherit;border-width:0;border-radius:0;padding:0;font-size:unset;line-height:inherit}[type='file']:focus{outline:1px solid ButtonText;outline:1px auto -webkit-focus-ring-color}.pointer-events-none{pointer-events:none}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.inset-0{inset:0px}.-right-20{right:-5rem}.-top-20{top:-5rem}.left-0{left:0px}.top-0{top:0px}.-z-10{z-index:-10}.z-10{z-index:10}.z-50{z-index:50}.mb-lg{margin-bottom:24px}.mb-md{margin-bottom:16px}.mb-xl{margin-bottom:40px}.mt-lg{margin-top:24px}.mt-md{margin-top:16px}.mt-sm{margin-top:8px}.mt-xl{margin-top:40px}.mt-xs{margin-top:4px}.line-clamp-2{overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}.flex{display:flex}.grid{display:grid}.hidden{display:none}.h-10{height:2.5rem}.h-16{height:4rem}.h-40{height:10rem}.h-48{height:12rem}.h-64{height:16rem}.h-auto{height:auto}.h-full{height:100%}.min-h-\[884px\]{min-height:884px}.w-10{width:2.5rem}.w-64{width:16rem}.w-full{width:100%}.max-w-2xl{max-width:42rem}.max-w-\[400px\]{max-width:400px}.max-w-xl{max-width:36rem}.flex-grow{flex-grow:1}.translate-x-4{--tw-translate-x:1rem;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.translate-y-4{--tw-translate-y:1rem;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.transform{transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.cursor-pointer{cursor:pointer}.grid-cols-1{grid-template-columns:repeat(1, minmax(0, 1fr))}.grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-start{align-items:flex-start}.items-end{align-items:flex-end}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:0.25rem}.gap-gutter{gap:24px}.gap-lg{gap:24px}.gap-md{gap:16px}.gap-sm{gap:8px}.gap-xs{gap:4px}.self-start{align-self:flex-start}.overflow-hidden{overflow:hidden}.rounded{border-radius:0.125rem}.rounded-\[30px\]{border-radius:30px}.rounded-\[40px\]{border-radius:40px}.rounded-full{border-radius:0.75rem}.rounded-xl{border-radius:0.5rem}.border{border-width:1px}.border-4{border-width:4px}.border-b{border-bottom-width:1px}.border-t{border-top-width:1px}.border-border-muted{--tw-border-opacity:1;border-color:rgb(222 222 222 / var(--tw-border-opacity, 1))}.border-primary{--tw-border-opacity:1;border-color:rgb(0 24 69 / var(--tw-border-opacity, 1))}.border-primary-container{--tw-border-opacity:1;border-color:rgb(0 43 112 / var(--tw-border-opacity, 1))}.bg-\[\#00AEEF\]{--tw-bg-opacity:1;background-color:rgb(0 174 239 / var(--tw-bg-opacity, 1))}.bg-\[\#EE4A03\]{--tw-bg-opacity:1;background-color:rgb(238 74 3 / var(--tw-bg-opacity, 1))}.bg-action-blue{--tw-bg-opacity:1;background-color:rgb(92 136 213 / var(--tw-bg-opacity, 1))}.bg-background{--tw-bg-opacity:1;background-color:rgb(252 249 248 / var(--tw-bg-opacity, 1))}.bg-primary{--tw-bg-opacity:1;background-color:rgb(0 24 69 / var(--tw-bg-opacity, 1))}.bg-primary-container{--tw-bg-opacity:1;background-color:rgb(0 43 112 / var(--tw-bg-opacity, 1))}.bg-primary-container\/10{background-color:rgb(0 43 112 / 0.1)}.bg-primary-fixed-dim{--tw-bg-opacity:1;background-color:rgb(177 197 255 / var(--tw-bg-opacity, 1))}.bg-primary\/10{background-color:rgb(0 24 69 / 0.1)}.bg-secondary-container{--tw-bg-opacity:1;background-color:rgb(212 64 0 / var(--tw-bg-opacity, 1))}.bg-secondary\/10{background-color:rgb(169 49 0 / 0.1)}.bg-success-green{--tw-bg-opacity:1;background-color:rgb(118 167 44 / var(--tw-bg-opacity, 1))}.bg-surface{--tw-bg-opacity:1;background-color:rgb(252 249 248 / var(--tw-bg-opacity, 1))}.bg-surface-alt{--tw-bg-opacity:1;background-color:rgb(245 249 250 / var(--tw-bg-opacity, 1))}.bg-surface-container-high{--tw-bg-opacity:1;background-color:rgb(234 231 231 / var(--tw-bg-opacity, 1))}.bg-surface-container-low{--tw-bg-opacity:1;background-color:rgb(246 243 242 / var(--tw-bg-opacity, 1))}.bg-surface\/80{background-color:rgb(252 249 248 / 0.8)}.bg-tertiary-fixed-dim{--tw-bg-opacity:1;background-color:rgb(162 214 87 / var(--tw-bg-opacity, 1))}.bg-tertiary\/10{background-color:rgb(16 30 0 / 0.1)}.bg-white\/20{background-color:rgb(255 255 255 / 0.2)}.object-cover{object-fit:cover}.p-lg{padding:24px}.p-md{padding:16px}.px-2{padding-left:0.5rem;padding-right:0.5rem}.px-4{padding-left:1rem;padding-right:1rem}.px-6{padding-left:1.5rem;padding-right:1.5rem}.px-8{padding-left:2rem;padding-right:2rem}.px-margin-mobile{padding-left:16px;padding-right:16px}.px-md{padding-left:16px;padding-right:16px}.py-1{padding-top:0.25rem;padding-bottom:0.25rem}.py-16{padding-top:4rem;padding-bottom:4rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.py-3{padding-top:0.75rem;padding-bottom:0.75rem}.py-4{padding-top:1rem;padding-bottom:1rem}.py-lg{padding-top:24px;padding-bottom:24px}.py-sm{padding-top:8px;padding-bottom:8px}.py-xl{padding-top:40px;padding-bottom:40px}.pt-16{padding-top:4rem}.text-center{text-align:center}.align-middle{vertical-align:middle}.font-body-lg{font-family:Inter}.font-body-md{font-family:Inter}.font-caption{font-family:Inter}.font-display-lg{font-family:Hanken Grotesk}.font-headline-lg{font-family:Hanken Grotesk}.font-headline-lg-mobile{font-family:Hanken Grotesk}.font-headline-md{font-family:Hanken Grotesk}.font-label-md{font-family:Inter}.font-title-md{font-family:Hanken Grotesk}.text-body-lg{font-size:16px;line-height:24px;font-weight:400}.text-body-md{font-size:14px;line-height:20px;font-weight:400}.text-caption{font-size:11px;line-height:14px;font-weight:400}.text-display-lg{font-size:48px;line-height:56px;letter-spacing:-0.02em;font-weight:700}.text-headline-lg{font-size:32px;line-height:40px;font-weight:600}.text-headline-lg-mobile{font-size:24px;line-height:32px;font-weight:600}.text-headline-md{font-size:24px;line-height:32px;font-weight:600}.text-label-md{font-size:12px;line-height:16px;letter-spacing:0.05em;font-weight:600}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-title-md{font-size:18px;line-height:24px;font-weight:500}.text-xs{font-size:0.75rem;line-height:1rem}.font-bold{font-weight:700}.font-light{font-weight:300}.font-semibold{font-weight:600}.uppercase{text-transform:uppercase}.italic{font-style:italic}.tracking-wider{letter-spacing:0.05em}.tracking-widest{letter-spacing:0.1em}.text-action-blue{--tw-text-opacity:1;color:rgb(92 136 213 / var(--tw-text-opacity, 1))}.text-on-background{--tw-text-opacity:1;color:rgb(27 27 27 / var(--tw-text-opacity, 1))}.text-on-primary{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.text-on-surface{--tw-text-opacity:1;color:rgb(27 27 27 / var(--tw-text-opacity, 1))}.text-on-surface-variant{--tw-text-opacity:1;color:rgb(68 70 81 / var(--tw-text-opacity, 1))}.text-primary{--tw-text-opacity:1;color:rgb(0 24 69 / var(--tw-text-opacity, 1))}.text-primary-container{--tw-text-opacity:1;color:rgb(0 43 112 / var(--tw-text-opacity, 1))}.text-primary-fixed{--tw-text-opacity:1;color:rgb(218 226 255 / var(--tw-text-opacity, 1))}.text-primary-fixed-dim{--tw-text-opacity:1;color:rgb(177 197 255 / var(--tw-text-opacity, 1))}.text-secondary{--tw-text-opacity:1;color:rgb(169 49 0 / var(--tw-text-opacity, 1))}.text-secondary-container{--tw-text-opacity:1;color:rgb(212 64 0 / var(--tw-text-opacity, 1))}.text-tertiary{--tw-text-opacity:1;color:rgb(16 30 0 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.opacity-10{opacity:0.1}.opacity-50{opacity:0.5}.opacity-80{opacity:0.8}.shadow-sm{--tw-shadow:0 1px 2px 0 rgb(0 0 0 / 0.05);--tw-shadow-colored:0 1px 2px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.blur-3xl{--tw-blur:blur(64px);filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.backdrop-blur-md{--tw-backdrop-blur:blur(12px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.backdrop-blur-sm{--tw-backdrop-blur:blur(4px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-colors{transition-property:color, background-color, border-color, fill, stroke, -webkit-text-decoration-color;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, -webkit-text-decoration-color;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-opacity{transition-property:opacity;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-shadow{transition-property:box-shadow;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.duration-300{transition-duration:300ms}.hover\:bg-primary:hover{--tw-bg-opacity:1;background-color:rgb(0 24 69 / var(--tw-bg-opacity, 1))}.hover\:bg-secondary:hover{--tw-bg-opacity:1;background-color:rgb(169 49 0 / var(--tw-bg-opacity, 1))}.hover\:bg-secondary-container:hover{--tw-bg-opacity:1;background-color:rgb(212 64 0 / var(--tw-bg-opacity, 1))}.hover\:bg-surface-alt:hover{--tw-bg-opacity:1;background-color:rgb(245 249 250 / var(--tw-bg-opacity, 1))}.hover\:text-primary:hover{--tw-text-opacity:1;color:rgb(0 24 69 / var(--tw-text-opacity, 1))}.hover\:text-secondary-container:hover{--tw-text-opacity:1;color:rgb(212 64 0 / var(--tw-text-opacity, 1))}.hover\:text-secondary-fixed:hover{--tw-text-opacity:1;color:rgb(255 219 208 / var(--tw-text-opacity, 1))}.hover\:underline:hover{-webkit-text-decoration-line:underline;text-decoration-line:underline}.hover\:opacity-100:hover{opacity:1}.active\:scale-95:active{--tw-scale-x:.95;--tw-scale-y:.95;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.group:hover .group-hover\:bg-transparent{background-color:transparent}.dark\:bg-background:is(.dark *){--tw-bg-opacity:1;background-color:rgb(252 249 248 / var(--tw-bg-opacity, 1))}.dark\:bg-primary-container:is(.dark *){--tw-bg-opacity:1;background-color:rgb(0 43 112 / var(--tw-bg-opacity, 1))}.dark\:text-primary-fixed:is(.dark *){--tw-text-opacity:1;color:rgb(218 226 255 / var(--tw-text-opacity, 1))}@media (min-width: 768px){.md\:col-span-2{grid-column:span 2 / span 2}.md\:mb-0{margin-bottom:0px}.md\:mt-0{margin-top:0px}.md\:flex{display:flex}.md\:h-auto{height:auto}.md\:w-1\/2{width:50%}.md\:grid-cols-3{grid-template-columns:repeat(3, minmax(0, 1fr))}.md\:grid-cols-4{grid-template-columns:repeat(4, minmax(0, 1fr))}.md\:flex-row{flex-direction:row}.md\:px-margin-desktop{padding-left:64px;padding-right:64px}.md\:py-24{padding-top:6rem;padding-bottom:6rem}.md\:text-right{text-align:right}.md\:font-headline-lg{font-family:Hanken Grotesk}.md\:text-headline-lg{font-size:32px;line-height:40px;font-weight:600}}</style></head>
+<body class="bg-background text-on-background font-body-md min-h-[884px] flex flex-col pt-16" data-mode="connect" data-stitch-vh="min-h-[884px]===min-h-screen">
+<!-- TopNavBar Component -->
+<nav class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-16 bg-surface dark:bg-background border-b border-border-muted">
+<div class="flex items-center gap-lg">
+<a class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed" href="/">
+                ClassConnect
+            </a>
+</div>
+<div class="hidden md:flex items-center gap-gutter font-body-md text-body-md">
+<!-- Active state logic: Assuming Homepage, but none of these exactly match "Home". We'll leave them inactive. -->
+<a class="text-on-surface-variant hover:text-primary hover:text-secondary-container transition-colors cursor-pointer transition-all active:scale-95" href="#">Courses</a>
+<a class="text-on-surface-variant hover:text-primary hover:text-secondary-container transition-colors cursor-pointer transition-all active:scale-95" href="#">Instructors</a>
+<a class="text-on-surface-variant hover:text-primary hover:text-secondary-container transition-colors cursor-pointer transition-all active:scale-95" href="#">Pricing</a>
+<a class="text-on-surface-variant hover:text-primary hover:text-secondary-container transition-colors cursor-pointer transition-all active:scale-95" href="#">About</a>
+</div>
+<div class="flex items-center gap-md">
+<button class="font-label-md text-label-md px-4 py-2 border border-primary text-primary rounded hover:bg-surface-alt transition-colors">
+                Sign In
+            </button>
+<button class="font-label-md text-label-md px-6 py-2 bg-gradient-to-r from-primary to-secondary text-white rounded-full hover:shadow-ambient transition-all active:scale-95">
+                Get Started
+            </button>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-grow flex flex-col">
+<!-- Hero Section -->
+<section class="relative w-full bg-primary-container text-on-primary overflow-hidden py-16 md:py-24 px-margin-mobile md:px-margin-desktop flex flex-col md:flex-row items-center justify-between gap-gutter"><div class="absolute inset-0 opacity-10 pointer-events-none"><svg height="100%" width="100%" xmlns="http://www.w3.org/2000/svg"><defs><pattern height="40" id="grid" patternunits="userSpaceOnUse" width="40"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" stroke-width="0.5"></path></pattern></defs><rect fill="url(#grid)" height="100%" width="100%"></rect></svg></div><div class="relative z-10 w-full md:w-1/2 flex flex-col gap-md items-start"><h1 class="font-display-lg text-display-lg font-bold text-on-primary">Welcome to ClassConnect</h1><p class="font-headline-lg-mobile md:font-headline-lg text-primary-fixed-dim italic font-light">Skills that Build Success</p><div class="mt-lg flex gap-sm items-center flex-wrap"><span class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white backdrop-blur-sm"><span class="material-symbols-outlined">group</span></span><span class="w-10 h-10 rounded-full bg-action-blue flex items-center justify-center text-white"><span class="material-symbols-outlined">filter_alt</span></span><span class="w-10 h-10 rounded-full bg-success-green flex items-center justify-center text-white"><span class="material-symbols-outlined">handshake</span></span></div><div class="mt-lg"><button class="font-label-md text-label-md px-8 py-4 bg-gradient-to-r from-primary to-secondary text-white rounded-full hover:shadow-modal transition-all active:scale-95">Explore Courses</button></div></div><div class="relative z-10 w-full md:w-1/2 flex justify-center mt-xl md:mt-0"><div class="relative w-full max-w-2xl"><img alt="Skaarvi Composition" class="w-full h-auto object-cover rounded-xl shadow-modal" src="https://lh3.googleusercontent.com/aida/AP1WRLspUXVcI64joFsFRuESbI_yOEd7yIWt0R7LBGxUKEGWdmuPzba8KSUyUPi5xtVcLg--tKGnG7sPFYz6llDwjEEbGoz1xYsF15mwVa4VVzxB8H2ginqQakKvrkPYQIbJHohgqDv6xBgEZ95WPgyn1-J6-r-6tk0sont-y1H5tB7jJHSA1wgbvsFmWnQQxtDMVGAB7BbYqTiy5deZske1UFD2MnQ1neYYsZbTK_n2pZfiAx0rX_Yfxvj0GQ"/></div></div></section>
+<!-- Stats / Features Bar -->
+<section class="w-full bg-surface py-lg px-margin-mobile md:px-margin-desktop border-b border-border-muted grid grid-cols-2 md:grid-cols-4 gap-gutter text-center">
+<div class="flex flex-col items-center gap-xs">
+<span class="font-headline-md text-headline-md font-bold text-primary-container">1000+</span>
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Users</span>
+</div>
+<div class="flex flex-col items-center gap-xs">
+<span class="font-headline-md text-headline-md font-bold text-primary-container">500+</span>
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Videos</span>
+</div>
+<div class="flex flex-col items-center gap-xs">
+<span class="font-headline-md text-headline-md font-bold text-primary-container">100%</span>
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Happy Students</span>
+</div>
+<div class="flex flex-col items-center gap-xs">
+<span class="font-headline-md text-headline-md font-bold text-primary-container">4.9</span>
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Rating</span>
+</div>
+</section>
+<!-- Courses Section (Bento Grid Style) -->
+<section class="w-full py-xl px-margin-mobile md:px-margin-desktop bg-surface-alt">
+<div class="flex flex-col md:flex-row justify-between items-end mb-lg gap-md">
+<div>
+<span class="font-label-md text-label-md text-secondary-container uppercase tracking-widest">Learn Today</span>
+<h2 class="font-headline-lg text-headline-lg font-bold text-on-surface mt-xs">Our Best Online Courses</h2>
+</div>
+<button class="font-label-md text-label-md text-action-blue flex items-center gap-xs hover:underline">
+                    View All <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter"><!-- Course Card 1 -->
+<div class="bg-surface rounded-xl border border-border-muted overflow-hidden hover:shadow-modal transition-all duration-300 flex flex-col group cursor-pointer">
+<div class="h-48 relative overflow-hidden">
+<img alt="Blogging Mastery" class="w-full h-full object-cover group-hover:scale-105 transition-all duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuChcTllKVvnmUiPH9hBqGIuPBxeNQEnoOU5V7KBi6Ivk_JgTUaXrU4uOttdXTpEro7uSxiqiEwbTU-b-1KnE2hCvIIhmhwDPSCJQHNRhakVFHFA5rx5DsYaAWYb3t6IyJ3OClTynwGgSvUFN_9Av2W2quZI_x_0LGEvojklQ_7Sn3hz0DPqjm0LyY4Hs6seas2Qrt4EVrj8EwaGV8C2ryEchkFfazfyo70umz8L57szjlxcgU7PRMU2"/>
+</div>
+<div class="p-lg flex flex-col gap-md flex-grow">
+<h3 class="font-headline-md text-title-md font-bold text-on-surface">Blogging Mastery</h3>
+<p class="font-body-md text-on-surface-variant line-clamp-2">Master the art of blogging and content creation in Telugu.</p>
+<div class="mt-auto flex justify-between items-center">
+<span class="font-headline-md text-primary font-bold">$49.99</span>
+<button class="font-label-md text-label-md px-4 py-2 bg-primary text-white rounded hover:bg-secondary transition-colors">View Details</button>
+</div>
+</div>
+</div>
+<!-- Course Card 2 -->
+<div class="bg-surface rounded-xl border border-border-muted overflow-hidden hover:shadow-modal transition-all duration-300 flex flex-col group cursor-pointer">
+<div class="h-48 relative overflow-hidden">
+<img alt="Pinterest Marketing" class="w-full h-full object-cover group-hover:scale-105 transition-all duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCr6mncCNn_r76goNdqKVJEFVoq_U4ZPSEGmUTgpwPT3WG2oe6v08rABhIzK2-VZqwj-CDLrgTlDeSvHUYTeYnlukUQcD_FlCUltf1ZGwA932eWuG4tXhSQ7x8k0s4COeefBt05nsZHDJgCWMLojNTZFb9zQ03HeRjZa7AYtYm2Th68mwR2jlBT8c829lvWFA8TLszLRYnArgLiOuQxKONPUH5pMJNVnHy4UcbFKERLZmpU5OXPAKBq"/>
+</div>
+<div class="p-lg flex flex-col gap-md flex-grow">
+<h3 class="font-headline-md text-title-md font-bold text-on-surface">Pinterest Marketing</h3>
+<p class="font-body-md text-on-surface-variant line-clamp-2">Unlock the power of Pinterest for your business growth.</p>
+<div class="mt-auto flex justify-between items-center">
+<span class="font-headline-md text-primary font-bold">$59.99</span>
+<button class="font-label-md text-label-md px-4 py-2 bg-primary text-white rounded hover:bg-secondary transition-colors">View Details</button>
+</div>
+</div>
+</div>
+<!-- Course Card 3 -->
+<div class="bg-surface rounded-xl border border-border-muted overflow-hidden hover:shadow-modal transition-all duration-300 flex flex-col group cursor-pointer">
+<div class="h-48 relative overflow-hidden">
+<img alt="Google Ads Mastery" class="w-full h-full object-cover group-hover:scale-105 transition-all duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuChcTllKVvnmUiPH9hBqGIuPBxeNQEnoOU5V7KBi6Ivk_JgTUaXrU4uOttdXTpEro7uSxiqiEwbTU-b-1KnE2hCvIIhmhwDPSCJQHNRhakVFHFA5rx5DsYaAWYb3t6IyJ3OClTynwGgSvUFN_9Av2W2quZI_x_0LGEvojklQ_7Sn3hz0DPqjm0LyY4Hs6seas2Qrt4EVrj8EwaGV8C2ryEchkFfazfyo70umz8L57szjlxcgU7PRMU2"/>
+</div>
+<div class="p-lg flex flex-col gap-md flex-grow">
+<h3 class="font-headline-md text-title-md font-bold text-on-surface">Google Ads Mastery</h3>
+<p class="font-body-md text-on-surface-variant line-clamp-2">Professional training on Google Ads and PPC strategies.</p>
+<div class="mt-auto flex justify-between items-center">
+<span class="font-headline-md text-primary font-bold">$69.99</span>
+<button class="font-label-md text-label-md px-4 py-2 bg-primary text-white rounded hover:bg-secondary transition-colors">View Details</button>
+</div>
+</div>
+</div></div>
+</section><section class="w-full py-xl px-margin-mobile md:px-margin-desktop bg-surface"><div class="text-center mb-xl"><span class="font-label-md text-label-md text-secondary-container uppercase tracking-widest">Special Offers</span><h2 class="font-headline-lg text-headline-lg font-bold text-on-surface mt-xs">Package Bundles</h2></div><div class="grid grid-cols-1 md:grid-cols-3 gap-gutter"><!-- Bronze Package -->
+<div class="bg-surface-container-low p-lg rounded-xl border border-border-muted flex flex-col gap-md hover:shadow-ambient transition-all">
+<div class="text-center mb-md">
+<h3 class="font-title-md text-secondary font-bold uppercase tracking-widest">Bronze</h3>
+<div class="mt-sm">
+<span class="text-on-surface-variant line-through text-sm">$129</span>
+<div class="font-display-lg text-primary font-bold">$99</div>
+</div>
+</div>
+<ul class="flex flex-col gap-sm font-body-md text-on-surface-variant">
+<li class="flex items-center gap-xs"><span class="material-symbols-outlined text-success-green text-sm filled">check</span> Meesho Reselling</li>
+<li class="flex items-center gap-xs"><span class="material-symbols-outlined text-success-green text-sm filled">check</span> Cap cut Video Editing</li>
+<li class="flex items-center gap-xs"><span class="material-symbols-outlined text-success-green text-sm filled">check</span> Whatsapp marketing</li>
+</ul>
+<button class="mt-auto font-label-md text-label-md px-6 py-3 bg-primary text-white rounded hover:bg-secondary transition-all active:scale-95">Register</button>
+</div>
+<!-- Silver Package (Most Popular) -->
+<div class="bg-primary-container p-lg rounded-xl border-4 border-secondary flex flex-col gap-md shadow-modal transform scale-105 z-10">
+<div class="bg-secondary text-white text-xs font-bold px-2 py-1 rounded self-center uppercase tracking-widest">Most Popular</div>
+<div class="text-center mb-md">
+<h3 class="font-title-md text-secondary-fixed font-bold uppercase tracking-widest">Silver</h3>
+<div class="mt-sm">
+<span class="text-primary-fixed-dim line-through text-sm">$400</span>
+<div class="font-display-lg text-white font-bold">$299</div>
+</div>
+</div>
+<ul class="flex flex-col gap-sm font-body-md text-primary-fixed">
+<li class="flex items-center gap-xs"><span class="material-symbols-outlined text-secondary text-sm filled">check</span> Bronze courses +</li>
+<li class="flex items-center gap-xs"><span class="material-symbols-outlined text-secondary text-sm filled">check</span> Mindset mastery</li>
+<li class="flex items-center gap-xs"><span class="material-symbols-outlined text-secondary text-sm filled">check</span> Inshot Video editing</li>
+<li class="flex items-center gap-xs"><span class="material-symbols-outlined text-secondary text-sm filled">check</span> AI Faceless instagram</li>
+</ul>
+<button class="mt-auto font-label-md text-label-md px-6 py-3 bg-white text-primary rounded hover:bg-surface-alt transition-all active:scale-95 font-bold">Register Now</button>
+</div>
+<!-- Gold Package -->
+<div class="bg-surface-container-low p-lg rounded-xl border border-border-muted flex flex-col gap-md hover:shadow-ambient transition-all">
+<div class="text-center mb-md">
+<h3 class="font-title-md text-secondary font-bold uppercase tracking-widest">Gold</h3>
+<div class="mt-sm">
+<span class="text-on-surface-variant line-through text-sm">$900</span>
+<div class="font-display-lg text-primary font-bold">$649</div>
+</div>
+</div>
+<ul class="flex flex-col gap-sm font-body-md text-on-surface-variant">
+<li class="flex items-center gap-xs"><span class="material-symbols-outlined text-success-green text-sm filled">check</span> Bronze + Silver</li>
+<li class="flex items-center gap-xs"><span class="material-symbols-outlined text-success-green text-sm filled">check</span> Meta Ads &amp; Google Ads</li>
+<li class="flex items-center gap-xs"><span class="material-symbols-outlined text-success-green text-sm filled">check</span> Pinterest marketing</li>
+<li class="flex items-center gap-xs"><span class="material-symbols-outlined text-success-green text-sm filled">check</span> Canva mastery</li>
+</ul>
+<button class="mt-auto font-label-md text-label-md px-6 py-3 bg-primary text-white rounded hover:bg-secondary transition-all active:scale-95">Register</button>
+</div></div></section>
+<!-- Testimonials (Glassmorphism / Horizontal Scroll hint) -->
+<section class="w-full py-xl px-margin-mobile md:px-margin-desktop bg-surface relative overflow-hidden">
+<!-- Decorative blur -->
+<div class="absolute -top-20 -right-20 w-64 h-64 bg-primary-fixed-dim rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+<div class="text-center mb-xl relative z-10">
+<span class="font-label-md text-label-md text-secondary-container uppercase tracking-widest">Success Stories</span>
+<h2 class="font-headline-lg text-headline-lg font-bold text-on-surface mt-xs">What our Students Say</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter relative z-10">
+<!-- Testimonial 1 -->
+<div class="bg-surface/80 backdrop-blur-md p-lg rounded-xl border border-border-muted flex flex-col gap-md shadow-sm hover:shadow-ambient transition-shadow">
+<div class="flex gap-1 text-secondary-container">
+<span class="material-symbols-outlined filled text-sm">star</span>
+<span class="material-symbols-outlined filled text-sm">star</span>
+<span class="material-symbols-outlined filled text-sm">star</span>
+<span class="material-symbols-outlined filled text-sm">star</span>
+<span class="material-symbols-outlined filled text-sm">star</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant italic flex-grow">
+                        "I'm thrilled to have had the opportunity to learn! The training sessions are a total game-changer. They break down complex concepts into easy-to-understand, bite-sized pieces."
+                    </p>
+<div class="flex items-center gap-sm mt-sm">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary">VK</div>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface">Vamsi Krishna</h4>
+<span class="font-caption text-caption text-on-surface-variant">Student</span>
+</div>
+</div>
+</div>
+<!-- Testimonial 2 -->
+<div class="bg-surface/80 backdrop-blur-md p-lg rounded-xl border border-border-muted flex flex-col gap-md shadow-sm hover:shadow-ambient transition-shadow">
+<div class="flex gap-1 text-secondary-container">
+<span class="material-symbols-outlined filled text-sm">star</span>
+<span class="material-symbols-outlined filled text-sm">star</span>
+<span class="material-symbols-outlined filled text-sm">star</span>
+<span class="material-symbols-outlined filled text-sm">star</span>
+<span class="material-symbols-outlined filled text-sm">star</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant italic flex-grow">
+                        "As a realtor, I joined these classes to grow my business. The trainings helped me a lot. The expert directly takes live trainings which are so valuable and informative."
+                    </p>
+<div class="flex items-center gap-sm mt-sm">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary">SK</div>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface">Sampath Kumar</h4>
+<span class="font-caption text-caption text-on-surface-variant">Real Estate Agent</span>
+</div>
+</div>
+</div>
+<!-- Testimonial 3 -->
+<div class="bg-surface/80 backdrop-blur-md p-lg rounded-xl border border-border-muted flex flex-col gap-md shadow-sm hover:shadow-ambient transition-shadow">
+<div class="flex gap-1 text-secondary-container">
+<span class="material-symbols-outlined filled text-sm">star</span>
+<span class="material-symbols-outlined filled text-sm">star</span>
+<span class="material-symbols-outlined filled text-sm">star</span>
+<span class="material-symbols-outlined filled text-sm">star</span>
+<span class="material-symbols-outlined filled text-sm">star</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant italic flex-grow">
+                        "As a full-time software engineer, I was always looking for ways to utilize my free time productively. Joining turned out to be one of the best decisions. Practical and motivating."
+                    </p>
+<div class="flex items-center gap-sm mt-sm">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary">GB</div>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface">Gade Balaji</h4>
+<span class="font-caption text-caption text-on-surface-variant">Software Engineer</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- CTA Section -->
+<section class="w-full py-xl px-margin-mobile md:px-margin-desktop bg-primary-container text-center flex flex-col items-center justify-center">
+<h2 class="font-headline-lg text-headline-lg font-bold text-white max-w-2xl">Ready to enhance your skills and advance your career?</h2>
+<p class="font-body-lg text-body-lg text-primary-fixed mt-md mb-lg max-w-xl">Join thousands of students who have already transformed their professional lives through our expert-led courses.</p>
+<button class="font-label-md text-label-md px-10 py-5 bg-gradient-to-r from-primary to-secondary text-white rounded-full hover:shadow-modal transition-all active:scale-95 text-lg font-bold">
+                Register Now
+             </button>
+</section>
+</main>
+<!-- Footer Component -->
+<footer class="w-full py-xl px-margin-mobile md:px-margin-desktop flex flex-col md:flex-row justify-between items-center bg-primary dark:bg-primary-container">
+<div class="font-headline-md text-headline-md font-bold text-on-primary mb-md md:mb-0">
+            ClassConnect
+        </div>
+<div class="flex gap-md flex-wrap justify-center mb-md md:mb-0">
+<!-- Active navigation logic doesn't strictly apply to footer links in this view, styling as inactive/universal -->
+<a class="font-caption text-caption text-on-primary opacity-80 hover:opacity-100 hover:text-secondary-fixed transition-opacity cursor-pointer" href="#">Terms of Service</a>
+<a class="font-caption text-caption text-on-primary opacity-80 hover:opacity-100 hover:text-secondary-fixed transition-opacity cursor-pointer" href="#">Privacy Policy</a>
+<a class="font-caption text-caption text-on-primary opacity-80 hover:opacity-100 hover:text-secondary-fixed transition-opacity cursor-pointer" href="#">Contact Support</a>
+<a class="font-caption text-caption text-on-primary opacity-80 hover:opacity-100 hover:text-secondary-fixed transition-opacity cursor-pointer" href="#">Help Center</a>
+</div>
+<div class="font-caption text-caption text-on-primary opacity-80 text-center md:text-right">
+            © 2024 ClassConnect Learning Systems. All rights reserved.
+        </div>
+</footer>
+</body></html>
