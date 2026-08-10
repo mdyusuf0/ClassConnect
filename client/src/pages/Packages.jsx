@@ -1,15 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import store from '../data/mockStore';
-import { Check, Zap, Sparkles } from 'lucide-react';
+import { CheckCircle2, Zap, Sparkles } from 'lucide-react';
 import { translations } from '../data/translations';
 
 export default function Packages({ currentLang = 'EN' }) {
   const packages = store.getPackages();
   const t = translations[currentLang]?.packagesPage || translations.EN.packagesPage;
   const tc = translations[currentLang]?.common || translations.EN.common;
-
-  const packageNumbers = ['#01', '#02', '#03', '#04', '#05'];
 
   return (
     <div className="bg-[#F5F9FA] min-h-screen py-10 overflow-x-hidden">
@@ -27,7 +25,7 @@ export default function Packages({ currentLang = 'EN' }) {
         </div>
       </div>
 
-      {/* Packages Grid Section with Background Ambient Glow */}
+      {/* Packages Grid Section with Background Ambient Glow (Identical to Home Page) */}
       <div className="max-w-7xl mx-auto px-4 lg:px-8 mb-20 package-ambient-glow relative">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 items-stretch">
           {packages.map((pkg, idx) => (
@@ -36,56 +34,44 @@ export default function Packages({ currentLang = 'EN' }) {
               className="aceternity-package-card"
             >
               {/* Card Header */}
-              <div className="mb-4">
-                <div className="flex items-center justify-between text-xs text-gray-400 font-bold tracking-wider mb-1">
-                  <span>{packageNumbers[idx] || '#0' + (idx + 1)}</span>
-                  <span className="text-gray-300">•••</span>
-                </div>
-
-                <h3 className="font-heading font-extrabold text-2xl text-gray-900 mb-1">
-                  {pkg.name.split(' ')[0]} <span className="font-serif italic font-normal text-gray-600">{pkg.name.split(' ').slice(1).join(' ')}</span>
-                </h3>
-
-                <p className="text-xs text-gray-500 font-medium">
-                  {pkg.courses?.length || 4} Masterclasses Included
-                </p>
+              <div className="mb-3">
+                <span className="text-[11px] font-bold text-gray-400">#{'0' + (idx + 1)}</span>
+                <h3 className="font-heading font-extrabold text-xl text-gray-900 mb-1">{pkg.name}</h3>
+                <p className="text-xs text-gray-500 font-medium">{pkg.courses?.length || 4} Masterclasses Included</p>
               </div>
 
-              {/* Inner Inset Price & Action Box (Reference Layout) */}
-              <div className="bg-gray-50/90 rounded-2xl p-3.5 border border-gray-200/80 mb-5 flex items-center justify-between gap-3 shadow-inner">
+              {/* Inner Inset Price & Action Box */}
+              <div className="bg-gray-50/90 rounded-2xl p-3 border border-gray-200 mb-4 flex items-center justify-between gap-2 shadow-inner">
                 <Link 
                   to={`/register?package=${pkg.id}`} 
-                  className="px-4 py-2.5 rounded-full font-heading font-extrabold text-[11px] tracking-wider uppercase bg-primary-container hover:bg-primary text-white transition-all shadow-md active:scale-95 text-center whitespace-nowrap"
+                  className="px-3.5 py-2 rounded-full font-heading font-extrabold text-[10px] uppercase bg-primary-container text-white hover:bg-primary transition-all whitespace-nowrap"
                 >
                   {tc.enrollNow}
                 </Link>
-
                 <div className="text-right flex-shrink-0">
                   {pkg.originalPrice && (
-                    <span className="block text-[11px] font-semibold text-gray-400 line-through decoration-red-500 decoration-2 leading-none mb-1">
+                    <span className="block text-[10px] text-gray-400 line-through decoration-red-500 leading-none mb-0.5">
                       ₹{pkg.originalPrice.toLocaleString('en-IN')}
                     </span>
                   )}
-                  <span className="font-heading font-extrabold text-lg text-gray-900 leading-none">
+                  <span className="font-heading font-extrabold text-base text-gray-900 leading-none">
                     ₹{pkg.price.toLocaleString('en-IN')}
                   </span>
                 </div>
               </div>
 
-              {/* Referral Commission Badge */}
-              <div className="bg-amber-500/10 rounded-xl p-2.5 mb-5 border border-amber-500/20 flex items-center gap-2">
-                <Zap size={15} className="text-amber-600 flex-shrink-0" />
-                <span className="text-xs font-semibold text-gray-800">
-                  {t.referralEarnings} <strong className="text-amber-600 font-extrabold">₹{pkg.commission}</strong>
-                </span>
+              {/* Referral Earnings Badge */}
+              <div className="bg-amber-50 rounded-lg p-2 mb-4 text-xs font-semibold text-amber-800 flex items-center gap-1.5">
+                <Zap size={14} className="text-amber-600 flex-shrink-0" />
+                <span>{tc.referralEarnings}: <strong>₹{pkg.commission}</strong></span>
               </div>
 
-              {/* Features Checklist */}
-              <ul className="space-y-2.5 text-xs text-gray-600 mb-4 flex-grow border-t border-gray-100 pt-4">
-                {pkg.features.map((feature, fIdx) => (
-                  <li key={fIdx} className="flex items-start gap-2">
-                    <Check size={14} className="text-emerald-600 flex-shrink-0 mt-0.5" />
-                    <span className="leading-snug">{feature}</span>
+              {/* Features List */}
+              <ul className="space-y-2 text-xs text-gray-600 mb-4 flex-grow border-t border-gray-100 pt-3">
+                {pkg.features.map((feat, fIdx) => (
+                  <li key={fIdx} className="flex items-start gap-1.5">
+                    <CheckCircle2 size={14} className="text-emerald-600 flex-shrink-0 mt-0.5" />
+                    <span>{feat}</span>
                   </li>
                 ))}
               </ul>
