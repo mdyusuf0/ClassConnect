@@ -39,7 +39,7 @@ export class BunnyService {
           AccessKey: env.BUNNY_STORAGE_API_KEY,
           'Content-Type': 'application/octet-stream',
         },
-        body: fileBuffer,
+        body: fileBuffer as any,
       });
 
       if (!response.ok) {
