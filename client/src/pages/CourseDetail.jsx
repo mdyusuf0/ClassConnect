@@ -1,48 +1,98 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getCourseDetailApi } from '../api/client';
-import { BookOpen, PlayCircle, Eye, Shield, CheckCircle2, Clock, Layers, ArrowRight, X, Sparkles } from 'lucide-react';
+import { getCourseDetailApi, getPublicReviewsApi, submitReviewApi } from '../api/client';
+import { useAuth } from '../context/AuthContext';
+import {
+  BookOpen,
+  CheckCircle2,
+  Clock,
+  Layers,
+  Shield,
+  Star,
+  PlayCircle,
+  Eye,
+  ArrowRight,
+  X,
+  MessageSquare,
+  Send,
+  AlertCircle,
+} from 'lucide-react';
 
 export default function CourseDetail() {
   const { slugOrId } = useParams();
+  const { isAuthenticated } = useAuth();
 
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [previewVideo, setPreviewVideo] = useState(null); // { title: string, videoUrl: string }
+  const [previewVideo, setPreviewVideo] = useState(null);
+
+  // Reviews State
+  const [reviewsData, setReviewsData] = useState({ averageRating: 0, totalReviews: 0, reviews: [] });
+  const [userRating, setUserRating] = useState(5);
+  const [userComment, setUserComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewMsg, setReviewMsg] = useState('');
+
+  const fetchCourseData = async () => {
+    setLoading(true);
+    try {
+      const res = await getCourseDetailApi(slugOrId);
+      if (res.success && res.course) {
+        setCourse(res.course);
+        const revRes = await getPublicReviewsApi(res.course._id || res.course.id);
+        if (revRes.success) {
+          setReviewsData(revRes);
+        }
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to load course details');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchDetail = async () => {
-      setLoading(true);
-      try {
-        const res = await getCourseDetailApi(slugOrId);
-        if (res.success && res.course) {
-          setCourse(res.course);
-        }
-      } catch (err) {
-        setError(err.message || 'Failed to load course details');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchDetail();
+    fetchCourseData();
   }, [slugOrId]);
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    if (!userComment.trim() || !course) return;
+    setSubmittingReview(true);
+    setReviewMsg('');
+
+    try {
+      const courseId = course._id || course.id;
+      const res = await submitReviewApi(courseId, {
+        rating: userRating,
+        comment: userComment,
+      });
+
+      if (res.success) {
+        setReviewMsg('Your review has been submitted and is pending admin moderation!');
+        setUserComment('');
+      }
+    } catch (err) {
+      setReviewMsg(err.response?.data?.error || err.message || 'Failed to submit review');
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
 
   if (loading) {
     return (
-      <div className="min-h-[75vh] flex items-center justify-center">
+      <div className="min-h-[80vh] flex items-center justify-center">
         <span className="loading loading-spinner loading-lg text-indigo-500"></span>
       </div>
     );
   }
 
-  if (error || !course) {
+  if (!course) {
     return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center text-center p-6 space-y-4">
-        <BookOpen className="w-12 h-12 text-slate-600" />
-        <h2 className="text-xl font-bold text-white">Course Not Found</h2>
-        <p className="text-xs text-slate-400 max-w-sm">{error || 'The requested course does not exist.'}</p>
-        <Link to="/" className="btn btn-sm btn-primary">Return to Catalog</Link>
+      <div className="container mx-auto px-6 py-16 text-center space-y-4">
+        <h2 className="text-2xl font-bold text-white">Course Not Found</h2>
+        <Link to="/" className="btn btn-primary">Back to Course Catalog</Link>
       </div>
     );
   }
@@ -62,7 +112,10 @@ export default function CourseDetail() {
 
             <div className="flex items-center gap-6 pt-2 text-xs text-slate-400">
               <span className="flex items-center gap-1.5"><Layers className="w-4 h-4 text-indigo-400" /> {course.units?.length || 0} Curriculum Units</span>
-              <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-400" /> Certificate of Completion</span>
+              <span className="flex items-center gap-1.5 text-yellow-400 font-bold">
+                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" /> {reviewsData.averageRating || 4.8} ({reviewsData.totalReviews || 0} reviews)
+              </span>
+              <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-400" /> Certificate Included</span>
             </div>
           </div>
 
@@ -73,6 +126,7 @@ export default function CourseDetail() {
               alt={course.title}
               className="w-full h-44 object-cover rounded-xl border border-white/10"
             />
+
             <div className="space-y-1">
               <span className="text-xs text-slate-400 uppercase font-bold tracking-wider">Course Enrollment Fee</span>
               <div className="text-4xl font-black text-white">${course.price}</div>
@@ -93,39 +147,27 @@ export default function CourseDetail() {
       </div>
 
       {/* Curriculum Outline */}
-      <div className="container mx-auto px-6 max-w-4xl space-y-6">
-        <div className="flex items-center justify-between border-b border-white/10 pb-4">
-          <h2 className="text-2xl font-black text-white flex items-center gap-2">
-            <Layers className="w-6 h-6 text-indigo-400" /> Course Curriculum Outline
-          </h2>
-          <span className="text-xs text-slate-400">
-            {course.units?.reduce((sum, u) => sum + (u.lessons?.length || 0), 0) || 0} Total Video Lessons
-          </span>
-        </div>
+      <div className="container mx-auto px-6 max-w-6xl space-y-6">
+        <h2 className="text-2xl font-black text-white flex items-center gap-2">
+          <BookOpen className="w-6 h-6 text-indigo-400" /> Course Curriculum & Units
+        </h2>
 
         {course.units?.length === 0 ? (
-          <div className="card glass-panel p-8 text-center text-slate-400 text-xs rounded-2xl">
-            Curriculum schedule is currently being finalized by the instructor.
+          <div className="p-8 text-center glass-panel rounded-2xl border border-white/10 text-slate-400 text-sm">
+            Curriculum content is being updated by course instructors. Check back shortly.
           </div>
         ) : (
           <div className="space-y-4">
-            {course.units?.sort((a, b) => a.order - b.order).map((unit, uIdx) => (
-              <div key={unit.id || uIdx} className="card glass-panel rounded-2xl border border-white/10 overflow-hidden">
-                <div className="p-4 bg-slate-900/80 border-b border-white/10 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="w-7 h-7 rounded-lg bg-indigo-500/20 text-indigo-400 font-bold text-xs flex items-center justify-center border border-indigo-500/30">
-                      {uIdx + 1}
-                    </span>
-                    <div>
-                      <h3 className="font-bold text-white text-sm">{unit.title}</h3>
-                      {unit.description && <p className="text-xs text-slate-400">{unit.description}</p>}
-                    </div>
-                  </div>
-                  <span className="text-xs text-slate-400 font-mono">{unit.lessons?.length || 0} Lessons</span>
+            {course.units?.map((unit, uIdx) => (
+              <div key={unit.id || uIdx} className="card glass-panel rounded-2xl border border-white/10 p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-base text-white">{unit.title}</h3>
+                  <span className="badge badge-sm badge-outline text-slate-400">{unit.lessons?.length || 0} Lessons</span>
                 </div>
+                {unit.description && <p className="text-xs text-slate-400">{unit.description}</p>}
 
-                <div className="p-4 space-y-2">
-                  {unit.lessons?.sort((a, b) => a.order - b.order).map((lesson, lIdx) => (
+                <div className="space-y-2 pt-2 border-t border-white/5">
+                  {unit.lessons?.map((lesson, lIdx) => (
                     <div
                       key={lesson.id || lIdx}
                       className="flex items-center justify-between p-3 rounded-xl bg-slate-900/40 border border-white/5 text-xs"
@@ -166,6 +208,76 @@ export default function CourseDetail() {
         )}
       </div>
 
+      {/* Ratings & Reviews Section */}
+      <div className="container mx-auto px-6 max-w-6xl space-y-6 pt-6">
+        <h2 className="text-2xl font-black text-white flex items-center gap-2">
+          <Star className="w-6 h-6 text-yellow-400 fill-yellow-400" /> Student Ratings & Reviews
+        </h2>
+
+        {/* Submit Review Box */}
+        {isAuthenticated && (
+          <form onSubmit={handleReviewSubmit} className="card glass-panel p-6 rounded-2xl border border-white/10 space-y-4">
+            <h3 className="font-bold text-sm text-white">Leave a Course Review</h3>
+            {reviewMsg && (
+              <div className="alert alert-info bg-indigo-950/40 border border-indigo-500/30 text-indigo-300 text-xs">
+                <span>{reviewMsg}</span>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-300 font-semibold">Select Rating:</span>
+              <div className="rating rating-sm">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <input
+                    key={star}
+                    type="radio"
+                    name="rating-star"
+                    checked={userRating === star}
+                    onChange={() => setUserRating(star)}
+                    className="mask mask-star-2 bg-yellow-400"
+                  />
+                ))}
+              </div>
+            </div>
+
+            <textarea
+              required
+              rows={3}
+              value={userComment}
+              onChange={(e) => setUserComment(e.target.value)}
+              placeholder="Share your learning experience and feedback on this course..."
+              className="textarea textarea-bordered bg-slate-900/60 text-white text-xs border-white/10 w-full"
+            ></textarea>
+
+            <button
+              type="submit"
+              disabled={submittingReview}
+              className="btn btn-sm bg-indigo-600 hover:bg-indigo-700 text-white border-0 font-bold gap-2 self-start"
+            >
+              {submittingReview ? <span className="loading loading-spinner loading-xs"></span> : <Send className="w-3.5 h-3.5" />}
+              Submit Review
+            </button>
+          </form>
+        )}
+
+        {/* Approved Reviews List */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {reviewsData.reviews?.map((r) => (
+            <div key={r.reviewId} className="card glass-panel p-5 rounded-xl border border-white/10 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-bold text-white">{r.userName}</span>
+                <div className="flex items-center gap-1 text-yellow-400 font-bold">
+                  {Array.from({ length: r.rating }).map((_, i) => (
+                    <Star key={i} className="w-3 h-3 fill-yellow-400" />
+                  ))}
+                </div>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed">{r.comment}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Free Video Preview Modal */}
       {previewVideo && (
         <div className="modal modal-open">
@@ -188,7 +300,7 @@ export default function CourseDetail() {
 
             <div className="flex justify-between items-center text-xs pt-2">
               <span className="text-slate-400">Enjoying this free preview? Enroll to unlock the complete course.</span>
-              <Link to="/register" className="btn btn-sm btn-primary">Enroll Now</Link>
+              <Link to={`/checkout/${course._id || course.id || course.slug}`} className="btn btn-sm btn-primary">Enroll Now</Link>
             </div>
           </div>
         </div>

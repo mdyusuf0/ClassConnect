@@ -18,6 +18,7 @@ import AdminUnitLessonManager from '../pages/admin/AdminUnitLessonManager';
 import AdminPayments from '../pages/admin/AdminPayments';
 import AdminReferrals from '../pages/admin/AdminReferrals';
 import AdminLiveClasses from '../pages/admin/AdminLiveClasses';
+import AdminReviews from '../pages/admin/AdminReviews';
 import { RequireRole } from '../components/ProtectedRoute';
 
 export default function AppRoutes() {
@@ -130,6 +131,14 @@ export default function AppRoutes() {
         element={
           <RequireRole allowedRoles={['admin']}>
             <AdminLiveClasses />
+          </RequireRole>
+        }
+      />
+      <Route
+        path="/admin/reviews"
+        element={
+          <RequireRole allowedRoles={['admin']}>
+            <AdminReviews />
           </RequireRole>
         }
       />

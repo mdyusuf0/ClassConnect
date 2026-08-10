@@ -224,4 +224,25 @@ export const getChatMessagesApi = async (sessionId) => {
   return res.data;
 };
 
+// Ratings & Reviews Moderation API
+export const getPublicReviewsApi = async (courseId) => {
+  const res = await api.get(`/courses/${courseId}/reviews`);
+  return res.data;
+};
+
+export const submitReviewApi = async (courseId, reviewData) => {
+  const res = await api.post(`/courses/${courseId}/reviews`, reviewData);
+  return res.data;
+};
+
+export const getAdminReviewsApi = async () => {
+  const res = await api.get('/admin/reviews');
+  return res.data;
+};
+
+export const moderateReviewApi = async (reviewId, processData) => {
+  const res = await api.post(`/admin/reviews/${reviewId}/moderate`, processData);
+  return res.data;
+};
+
 export default api;

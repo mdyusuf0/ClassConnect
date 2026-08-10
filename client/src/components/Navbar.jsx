@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { BookOpen, LogOut, User, Shield, LogIn, LayoutDashboard, Share2, Radio } from 'lucide-react';
+import { BookOpen, LogOut, User, Shield, LogIn, LayoutDashboard, Share2, Radio, Star } from 'lucide-react';
 
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -64,6 +64,9 @@ export default function Navbar() {
                     </li>
                     <li>
                       <Link to="/admin/live"><Radio className="w-4 h-4 text-red-400" /> Live Classes Scheduler</Link>
+                    </li>
+                    <li>
+                      <Link to="/admin/reviews"><Star className="w-4 h-4 text-yellow-400" /> Review Moderation Queue</Link>
                     </li>
                     <li>
                       <Link to="/admin/referrals"><Share2 className="w-4 h-4 text-emerald-400" /> Referral CMS & Payouts</Link>
