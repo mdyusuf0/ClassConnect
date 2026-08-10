@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Eye, EyeOff, ArrowRight, CheckCircle2, ShieldCheck, Info, ChevronDown, Sparkles, Award, Zap, BookOpen, Layers } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, ArrowLeft, CheckCircle2, ShieldCheck, Info, ChevronDown, Sparkles, Award, Zap } from 'lucide-react';
 import store, { indianStates } from '../data/mockStore.js';
 
 const Register = ({ onLogin }) => {
@@ -103,22 +103,45 @@ const Register = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F9FA] text-gray-900 flex items-center justify-center p-4 lg:p-8 relative overflow-hidden">
+    <div className="min-h-screen bg-[#F5F9FA] text-gray-900 flex flex-col items-center justify-center p-4 lg:p-8 relative overflow-hidden">
       {/* Background Decorative Mesh */}
       <div className="absolute inset-0 dot-pattern opacity-25 pointer-events-none" />
       <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-purple-200/30 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-amber-200/30 rounded-full blur-3xl pointer-events-none" />
 
+      {/* Top Floating Navigation Bar with Back to Home Button */}
+      <div className="max-w-6xl w-full flex justify-between items-center mb-4 z-20">
+        <Link 
+          to="/" 
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-gray-200 hover:border-amber-400 text-xs font-bold text-gray-800 hover:text-amber-600 transition-all shadow-sm group"
+        >
+          <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+          <span>Back to Home</span>
+        </Link>
+
+        <Link 
+          to="/" 
+          className="font-heading font-extrabold text-xl tracking-tight flex items-center gap-0.5"
+        >
+          <span className="text-[#001845]">Class</span>
+          <span className="text-amber-500">Connect</span>
+        </Link>
+      </div>
+
       {/* Main 2-Column Split-Screen Card */}
       <div className="max-w-6xl w-full bg-white rounded-[32px] border border-gray-200/80 shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 relative z-10 my-auto">
         
-        {/* LEFT COLUMN: Creative Brand Showcase & Image */}
+        {/* LEFT COLUMN: Creative Brand Showcase & Clickable Logo */}
         <div className="lg:col-span-5 bg-gradient-to-br from-[#001845] via-[#002B70] to-[#001845] text-white p-8 lg:p-12 flex flex-col justify-between relative overflow-hidden">
           <div className="absolute inset-0 dot-pattern opacity-10 pointer-events-none" />
 
-          {/* Top Brand Logo */}
+          {/* Top Clickable Brand Logo Redirecting to Home */}
           <div className="relative z-10">
-            <Link to="/" className="font-heading font-extrabold text-2xl tracking-tight inline-flex items-center gap-0.5 mb-8">
+            <Link 
+              to="/" 
+              className="font-heading font-extrabold text-2xl tracking-tight inline-flex items-center gap-0.5 mb-8 hover:opacity-90 transition-opacity"
+              title="Click to return to Home page"
+            >
               <span className="text-white">Class</span>
               <span className="text-amber-400">Connect</span>
             </Link>
