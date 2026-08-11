@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
-import { createApp } from '../src/app.js';
+import { createApp } from '../app.js';
 
 describe('Courses, Units & CMS API (/api/courses)', () => {
   const app = createApp();

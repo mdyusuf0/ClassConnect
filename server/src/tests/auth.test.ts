@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
-import { createApp } from '../src/app.js';
+import { createApp } from '../app.js';
 
 describe('Authentication & Roles API (/api/auth)', () => {
   const app = createApp();
@@ -73,6 +73,51 @@ describe('Authentication & Roles API (/api/auth)', () => {
       .get('/api/admin/dashboard-stats')
       .set('Authorization', `Bearer ${studentToken}`);
     expect(res.status).toBe(403);
+    expect(res.body.success).toBe(false);
+  });
+
+  it('should reject registration with missing fields', async () => {
+    const res = await request(app).post('/api/auth/register').send({
+      name: 'Missing Fields User'
+      // email and password missing
+    });
+    expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
+  });
+
+  it('should reject registration with a duplicate email', async () => {
+    // Attempting to register another user with Samir's email
+    const res = await request(app).post('/api/auth/register').send({
+      name: 'Samir Duplicate',
+      email: testStudent.email,
+      password: 'newpassword123'
+    });
+    expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(res.body.error).toContain('already registered');
+  });
+
+  it('should get current user profile with a valid token', async () => {
+    const res = await request(app)
+      .get('/api/auth/me')
+      .set('Authorization', `Bearer ${studentToken}`);
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.user).toBeDefined();
+    expect(res.body.user.email).toBe(testStudent.email.toLowerCase());
+  });
+
+  it('should reject accessing profile without a token', async () => {
+    const res = await request(app).get('/api/auth/me');
+    expect(res.status).toBe(401);
+    expect(res.body.success).toBe(false);
+  });
+
+  it('should reject accessing profile with an invalid token', async () => {
+    const res = await request(app)
+      .get('/api/auth/me')
+      .set('Authorization', 'Bearer invalid_or_placeholder_token');
+    expect(res.status).toBe(401);
     expect(res.body.success).toBe(false);
   });
 });
