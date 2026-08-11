@@ -1,6 +1,7 @@
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
+import api from './api/client';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
 import Home from './pages/Home';
@@ -23,12 +24,17 @@ function getCookie(name) {
 
 function isUserAuthenticated(currentUser) {
   if (currentUser) return true;
-  const localUser = localStorage.getItem('classconnect_user');
-  const localToken = localStorage.getItem('classconnect_token');
+  const localUser = localStorage.getItem('classconnect_user') || localStorage.getItem('user');
+  const localToken = localStorage.getItem('classconnect_token') || localStorage.getItem('token');
   const cookieUser = getCookie('classconnect_user') || getCookie('user');
   const cookieToken = getCookie('classconnect_token') || getCookie('token') || getCookie('session');
 
-  return !!(localUser || localToken || cookieUser || cookieToken);
+  const hasLocalUser = localUser && localUser !== 'null' && localUser !== 'undefined' && localUser !== '';
+  const hasLocalToken = localToken && localToken !== 'null' && localToken !== 'undefined' && localToken !== '' && localToken !== 'valid_session';
+  const hasCookieUser = cookieUser && cookieUser !== 'null' && cookieUser !== 'undefined' && cookieUser !== '';
+  const hasCookieToken = cookieToken && cookieToken !== 'null' && cookieToken !== 'undefined' && cookieToken !== '' && cookieToken !== 'valid_session';
+
+  return !!(hasLocalUser || hasLocalToken || hasCookieUser || hasCookieToken);
 }
 
 function getUserTargetDashboard(currentUser) {
@@ -52,18 +58,6 @@ function App() {
 
   const location = useLocation();
 
-  useEffect(() => {
-    const savedUser = localStorage.getItem('classconnect_user') || getCookie('classconnect_user');
-    if (savedUser) {
-      try {
-        const parsed = typeof savedUser === 'string' ? JSON.parse(savedUser) : savedUser;
-        setCurrentUser(parsed);
-      } catch (e) {
-        localStorage.removeItem('classconnect_user');
-      }
-    }
-  }, []);
-
   const handleLangChange = (lang) => {
     setCurrentLang(lang);
     localStorage.setItem('classconnect_lang', lang);
@@ -72,7 +66,11 @@ function App() {
   const handleLogin = (user, token) => {
     setCurrentUser(user);
     const userStr = JSON.stringify(user);
-    const userToken = token || user.token || 'valid_session';
+    
+    // Check if there is already a token in localStorage (to avoid overwriting the real JWT token with a placeholder)
+    const localTok = localStorage.getItem('classconnect_token');
+    const hasLocalTok = localTok && localTok !== 'null' && localTok !== 'undefined' && localTok !== 'valid_session' && localTok !== '';
+    const userToken = token || user?.token || (hasLocalTok ? localTok : 'valid_session');
 
     localStorage.setItem('classconnect_user', userStr);
     localStorage.setItem('classconnect_token', userToken);
@@ -90,6 +88,39 @@ function App() {
     document.cookie = 'classconnect_token=; path=/; max-age=0; SameSite=Lax';
     document.cookie = 'token=; path=/; max-age=0; SameSite=Lax';
   };
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const token = localStorage.getItem('classconnect_token') || 
+                    localStorage.getItem('token') || 
+                    getCookie('classconnect_token') || 
+                    getCookie('token') || 
+                    getCookie('session');
+
+      if (token && token !== 'null' && token !== 'undefined' && token !== '' && token !== 'valid_session') {
+        localStorage.setItem('classconnect_token', token);
+        try {
+          const user = await api.getMeApi();
+          setCurrentUser(user);
+          localStorage.setItem('classconnect_user', JSON.stringify(user));
+        } catch (err) {
+          console.warn('Session verification failed, logging out:', err.message);
+          handleLogout();
+        }
+      } else {
+        const savedUser = localStorage.getItem('classconnect_user') || getCookie('classconnect_user') || getCookie('user');
+        if (savedUser) {
+          try {
+            const parsed = typeof savedUser === 'string' ? JSON.parse(savedUser) : savedUser;
+            setCurrentUser(parsed);
+          } catch (e) {
+            localStorage.removeItem('classconnect_user');
+          }
+        }
+      }
+    };
+    checkSession();
+  }, []);
 
   // Pages that should not show the main navbar & footer
   const transactionalRoutes = ['/register', '/login', '/admin', '/dashboard'];
@@ -149,4 +180,3 @@ function App() {
 }
 
 export default App;
-
