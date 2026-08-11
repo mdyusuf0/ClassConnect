@@ -7,6 +7,8 @@ import {
   updateLiveStatus,
   sendChatMessage,
   getChatMessages,
+  toggleChatEnabled,
+  deleteChatMessage,
 } from './live.controller.js';
 import { authenticate, authorize } from '../../middleware/auth.middleware.js';
 
@@ -16,6 +18,8 @@ const router = Router();
 router.post('/admin/live/schedule', authenticate, authorize('admin'), scheduleLiveClass);
 router.get('/admin/live/classes', authenticate, authorize('admin'), getAdminLiveClasses);
 router.put('/admin/live/sessions/:sessionId/status', authenticate, authorize('admin'), updateLiveStatus);
+router.put('/admin/live/sessions/:sessionId/chat-status', authenticate, authorize('admin'), toggleChatEnabled);
+router.delete('/admin/live/sessions/:sessionId/chat/:messageId', authenticate, authorize('admin'), deleteChatMessage);
 
 // Student & Participant Live Room & Chat Routes
 router.get('/live/courses/:courseId', authenticate, getStudentLiveClasses);

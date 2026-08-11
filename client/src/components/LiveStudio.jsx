@@ -2,20 +2,23 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Radio, Video, VideoOff, Mic, MicOff, Settings, Users, 
   UserX, ShieldAlert, MessageSquare, Send, X, Play, Square, 
-  Camera, Check, Upload, Sparkles, Volume2, VolumeX
+  Camera, Check, Upload, Sparkles, Volume2, VolumeX, Trash2
 } from 'lucide-react';
-import store from '../data/mockStore';
+import api from '../api/client';
 import ImageUploader from './ImageUploader';
 
-const LiveStudio = ({ session, onClose, onUpdateStatus }) => {
+const LiveStudio = ({ session, onClose, onUpdateStatus, onReloadUsers }) => {
   const videoRef = useRef(null);
   
   // Stream state
-  const [isLive, setIsLive] = useState(session?.status === 'LIVE_NOW');
+  const [isLive, setIsLive] = useState(session?.status === 'live');
   const [duration, setDuration] = useState(0);
   const [cameraOn, setCameraOn] = useState(true);
   const [micMuted, setMicMuted] = useState(false);
   const [streamMedia, setStreamMedia] = useState(null);
+
+  // Live session chat settings state
+  const [chatEnabled, setChatEnabled] = useState(session?.chatEnabled !== false);
 
   // Cover image
   const [coverImage, setCoverImage] = useState(session?.coverImage || '');
@@ -29,18 +32,10 @@ const LiveStudio = ({ session, onClose, onUpdateStatus }) => {
   const [selectedAudioDevice, setSelectedAudioDevice] = useState('');
 
   // Participants & Moderation
-  const [participants, setParticipants] = useState([
-    { id: 'u1', name: 'Alex Johnson (Student)', isMicMuted: true, isCameraOff: true, isSuspended: false, role: 'student' },
-    { id: 'u2', name: 'Bella Smith (Student)', isMicMuted: false, isCameraOff: true, isSuspended: false, role: 'student' },
-    { id: 'u3', name: 'Charlie Davis (Student)', isMicMuted: true, isCameraOff: false, isSuspended: false, role: 'student' },
-    { id: 'u4', name: 'Divya Sharma (Student)', isMicMuted: true, isCameraOff: true, isSuspended: false, role: 'student' },
-  ]);
+  const [participants, setParticipants] = useState([]);
 
   // Chat
-  const [chatMessages, setChatMessages] = useState([
-    { id: 'm1', sender: 'System', text: 'Welcome to the Live Masterclass Broadcast Studio!', time: 'Just now', isSystem: true },
-    { id: 'm2', sender: 'Alex Johnson', text: 'Hello Sir, excited for today’s session!', time: '1m ago' },
-  ]);
+  const [chatMessages, setChatMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
 
   // Timer effect for broadcast duration
@@ -59,21 +54,61 @@ const LiveStudio = ({ session, onClose, onUpdateStatus }) => {
   // WebRTC Camera Setup
   useEffect(() => {
     initCameraStream();
+    loadSessionDetailsAndChat();
+    loadCourseAttendees();
+
+    // Chat polling interval
+    const pollInterval = setInterval(() => {
+      loadSessionDetailsAndChat();
+      loadCourseAttendees();
+    }, 3000);
+
     return () => {
       stopCameraStream();
+      clearInterval(pollInterval);
     };
   }, []);
 
+  const loadSessionDetailsAndChat = async () => {
+    if (!session?.sessionId) return;
+    try {
+      // Fetch dynamic messages
+      const msgs = await api.getChatMessagesApi(session.sessionId);
+      setChatMessages(msgs || []);
+
+      // Fetch session status and chat settings
+      const details = await api.getLiveSessionDetailApi(session.sessionId);
+      if (details && details.session) {
+        setChatEnabled(details.session.chatEnabled !== false);
+        setIsLive(details.session.status === 'live');
+      }
+    } catch (err) {
+      console.warn('Failed to load chat/session details:', err.message);
+    }
+  };
+
+  const loadCourseAttendees = async () => {
+    if (!session?.courseId) return;
+    try {
+      const allUsers = await api.getAdminUsersApi();
+      // Filter students registered for this course
+      const courseStudents = allUsers.filter(
+        u => u.role === 'student' && u.enrolledCourses.includes(session.courseId)
+      );
+      setParticipants(courseStudents);
+    } catch (err) {
+      console.warn('Failed to load course attendees:', err.message);
+    }
+  };
+
   const initCameraStream = async () => {
     try {
-      // List media devices
       const devices = await navigator.mediaDevices.enumerateDevices();
       const videoDevs = devices.filter(d => d.kind === 'videoinput');
       const audioDevs = devices.filter(d => d.kind === 'audioinput');
       setVideoDevices(videoDevs);
       setAudioDevices(audioDevs);
 
-      // Request stream
       const stream = await navigator.mediaDevices.getUserMedia({
         video: true,
         audio: true
@@ -113,58 +148,80 @@ const LiveStudio = ({ session, onClose, onUpdateStatus }) => {
     setMicMuted(!micMuted);
   };
 
-  const handleStartBroadcast = () => {
-    setIsLive(true);
-    if (session && onUpdateStatus) {
-      onUpdateStatus(session.id, 'LIVE_NOW');
+  const handleStartBroadcast = async () => {
+    try {
+      await api.updateLiveStatusApi(session.sessionId, 'live');
+      setIsLive(true);
+      if (onUpdateStatus) {
+        onUpdateStatus(session.sessionId, 'live');
+      }
+    } catch (err) {
+      alert(err.message);
     }
   };
 
-  const handleEndBroadcast = () => {
+  const handleEndBroadcast = async () => {
     if (window.confirm('Are you sure you want to end this live broadcast? Recording will be stored to Bunny Stream.')) {
-      setIsLive(false);
-      if (session && onUpdateStatus) {
-        onUpdateStatus(session.id, 'COMPLETED');
+      try {
+        await api.updateLiveStatusApi(session.sessionId, 'ended');
+        setIsLive(false);
+        if (onUpdateStatus) {
+          onUpdateStatus(session.sessionId, 'ended');
+        }
+        onClose();
+      } catch (err) {
+        alert(err.message);
       }
     }
   };
 
   // Moderation Controls
-  const toggleUserMic = (id) => {
-    setParticipants(participants.map(p => 
-      p.id === id ? { ...p, isMicMuted: !p.isMicMuted } : p
-    ));
-  };
-
-  const toggleUserCamera = (id) => {
-    setParticipants(participants.map(p => 
-      p.id === id ? { ...p, isCameraOff: !p.isCameraOff } : p
-    ));
-  };
-
-  const toggleUserSuspend = (id) => {
-    setParticipants(participants.map(p => {
-      if (p.id === id) {
-        const nextState = !p.isSuspended;
-        alert(`${p.name} has been ${nextState ? 'Temporarily Suspended' : 'Restored'} from the live broadcast.`);
-        return { ...p, isSuspended: nextState };
+  const toggleUserSuspend = async (userId, currentSuspended) => {
+    const action = currentSuspended ? 'Restore' : 'Suspend';
+    if (window.confirm(`Are you sure you want to ${action} this student from the live class and platform?`)) {
+      try {
+        await api.toggleUserSuspensionApi(userId, !currentSuspended);
+        alert(`Student has been ${currentSuspended ? 'Restored' : 'Suspended'} from the live broadcast.`);
+        await loadCourseAttendees();
+        if (onReloadUsers) onReloadUsers();
+      } catch (err) {
+        alert(err.message);
       }
-      return p;
-    }));
+    }
   };
 
-  const handleSendChat = (e) => {
+  const toggleLiveChat = async () => {
+    try {
+      const nextChatState = !chatEnabled;
+      await api.toggleLiveChatApi(session.sessionId, nextChatState);
+      setChatEnabled(nextChatState);
+      alert(`Chat has been ${nextChatState ? 'ENABLED' : 'DISABLED'} for students.`);
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleDeleteComment = async (messageId) => {
+    if (window.confirm('Are you sure you want to delete this chat comment?')) {
+      try {
+        await api.deleteLiveChatMessageApi(session.sessionId, messageId);
+        await loadSessionDetailsAndChat();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+  };
+
+  const handleSendChat = async (e) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
-    const msg = {
-      id: 'msg-' + Date.now(),
-      sender: 'Host / Instructor',
-      text: newMessage,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      isHost: true
-    };
-    setChatMessages([...chatMessages, msg]);
-    setNewMessage('');
+    try {
+      await api.sendChatMessageApi(session.sessionId, newMessage);
+      setNewMessage('');
+      await loadSessionDetailsAndChat();
+    } catch (err) {
+      alert(err.message);
+    }
   };
 
   const formatTimer = (seconds) => {
@@ -175,10 +232,6 @@ const LiveStudio = ({ session, onClose, onUpdateStatus }) => {
 
   const handleSaveCoverImage = (newUrl) => {
     setCoverImage(newUrl);
-    if (session) {
-      session.coverImage = newUrl;
-      store.updateLiveSessionStatus(session.id, session.status);
-    }
     setShowCoverModal(false);
   };
 
@@ -262,70 +315,55 @@ const LiveStudio = ({ session, onClose, onUpdateStatus }) => {
               </div>
             )}
 
-            {/* Broadcast Overlay Info */}
-            <div className="absolute top-4 left-4 flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 text-xs">
-              <span className="font-semibold text-gray-300">Bunny Stream CDN:</span>
-              <code className="text-amber-400 font-mono">vz-e90d4726-817.b-cdn.net</code>
-            </div>
-
-            {/* Mic Status Watermark */}
-            <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 text-xs flex items-center gap-2">
-              {micMuted ? (
-                <span className="text-red-400 font-bold flex items-center gap-1"><MicOff size={14} /> Mic Muted</span>
-              ) : (
-                <span className="text-emerald-400 font-bold flex items-center gap-1"><Mic size={14} /> Audio Active</span>
-              )}
+            <div className="absolute top-4 left-4 bg-gray-900/80 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-gray-800 text-xs flex items-center gap-1.5">
+              <ShieldAlert size={14} className="text-amber-500" />
+              <span className="font-semibold text-gray-300">RTMP/WebRTC Encryption Enabled</span>
             </div>
           </div>
 
-          {/* Bottom Broadcast Control Toolbar */}
-          <div className="mt-4 bg-[#121827] border border-gray-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-xl">
-            
-            <div className="flex items-center gap-3">
-              {/* Camera Toggle */}
+          {/* Media Feed Controllers */}
+          <div className="mt-4 bg-[#121827] border border-gray-800 rounded-2xl p-4 flex items-center justify-between shadow-xl">
+            <div className="flex items-center gap-2">
               <button 
                 onClick={toggleCamera}
-                className={`p-3 rounded-xl flex items-center gap-2 font-bold text-xs transition-all shadow-md cursor-pointer ${
-                  cameraOn ? 'bg-gray-800 hover:bg-gray-700 text-white border border-gray-700' : 'bg-red-500/20 text-red-400 border border-red-500/40'
+                className={`p-3 rounded-xl border flex items-center justify-center transition-all cursor-pointer ${
+                  cameraOn ? 'bg-gray-800 text-white border-gray-700 hover:bg-gray-700' : 'bg-red-500/20 text-red-500 border-red-500/30'
                 }`}
+                title={cameraOn ? 'Turn off camera' : 'Turn on camera'}
               >
                 {cameraOn ? <Video size={18} /> : <VideoOff size={18} />}
-                <span className="hidden sm:inline">{cameraOn ? 'Cam ON' : 'Cam OFF'}</span>
               </button>
 
-              {/* Mic Toggle */}
               <button 
                 onClick={toggleMic}
-                className={`p-3 rounded-xl flex items-center gap-2 font-bold text-xs transition-all shadow-md cursor-pointer ${
-                  !micMuted ? 'bg-gray-800 hover:bg-gray-700 text-white border border-gray-700' : 'bg-red-500/20 text-red-400 border border-red-500/40'
+                className={`p-3 rounded-xl border flex items-center justify-center transition-all cursor-pointer ${
+                  !micMuted ? 'bg-gray-800 text-white border-gray-700 hover:bg-gray-700' : 'bg-red-500/20 text-red-500 border-red-500/30'
                 }`}
+                title={!micMuted ? 'Mute microphone' : 'Unmute microphone'}
               >
                 {!micMuted ? <Mic size={18} /> : <MicOff size={18} />}
-                <span className="hidden sm:inline">{!micMuted ? 'Mic Active' : 'Mic Muted'}</span>
               </button>
             </div>
 
-            {/* Start / End Broadcast CTA */}
-            <div>
+            <div className="flex items-center gap-2.5">
               {!isLive ? (
                 <button 
                   onClick={handleStartBroadcast}
-                  className="px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg flex items-center gap-2 transition-all cursor-pointer animate-bounce"
+                  className="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg flex items-center gap-2 cursor-pointer"
                 >
-                  <Radio size={18} />
-                  <span>Start Live Broadcast</span>
+                  <Play size={16} /> Go Live
                 </button>
               ) : (
                 <button 
                   onClick={handleEndBroadcast}
-                  className="px-6 py-3 bg-gray-800 hover:bg-black text-white font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg border border-red-500/50 flex items-center gap-2 transition-all cursor-pointer"
+                  className="px-6 py-2.5 bg-gray-800 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/30 hover:border-red-600 font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg flex items-center gap-2 cursor-pointer"
                 >
-                  <Square size={16} className="text-red-500" />
-                  <span>End Stream & Save Recording</span>
+                  <Square size={14} /> End Stream
                 </button>
               )}
             </div>
           </div>
+
         </div>
 
         {/* Sidebar: Participants Control & Live Chat Panel */}
@@ -341,7 +379,7 @@ const LiveStudio = ({ session, onClose, onUpdateStatus }) => {
 
             <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
               {participants.map(p => (
-                <div key={p.id} className={`p-2.5 rounded-xl border flex items-center justify-between text-xs transition-colors ${p.isSuspended ? 'bg-red-500/10 border-red-500/30 text-gray-400 opacity-60' : 'bg-gray-800/60 border-gray-800 text-gray-200'}`}>
+                <div key={p.id || p._id} className={`p-2.5 rounded-xl border flex items-center justify-between text-xs transition-colors ${p.isSuspended ? 'bg-red-500/10 border-red-500/30 text-gray-400 opacity-60' : 'bg-gray-800/60 border-gray-800 text-gray-200'}`}>
                   <div className="truncate pr-2">
                     <p className="font-bold truncate">{p.name}</p>
                     {p.isSuspended && <span className="text-[10px] text-red-400 font-extrabold uppercase">SUSPENDED</span>}
@@ -349,23 +387,9 @@ const LiveStudio = ({ session, onClose, onUpdateStatus }) => {
 
                   <div className="flex items-center gap-1 shrink-0">
                     <button 
-                      onClick={() => toggleUserMic(p.id)}
-                      className={`p-1.5 rounded-lg transition-colors ${p.isMicMuted ? 'bg-red-500/20 text-red-400' : 'bg-emerald-500/20 text-emerald-400'}`}
-                      title={p.isMicMuted ? 'Unmute Mic' : 'Mute Mic'}
-                    >
-                      {p.isMicMuted ? <MicOff size={13} /> : <Mic size={13} />}
-                    </button>
-                    <button 
-                      onClick={() => toggleUserCamera(p.id)}
-                      className={`p-1.5 rounded-lg transition-colors ${p.isCameraOff ? 'bg-red-500/20 text-red-400' : 'bg-emerald-500/20 text-emerald-400'}`}
-                      title={p.isCameraOff ? 'Enable Camera' : 'Disable Camera'}
-                    >
-                      {p.isCameraOff ? <VideoOff size={13} /> : <Video size={13} />}
-                    </button>
-                    <button 
-                      onClick={() => toggleUserSuspend(p.id)}
+                      onClick={() => toggleUserSuspend(p.id || p._id, p.isSuspended)}
                       className={`p-1.5 rounded-lg transition-colors ${p.isSuspended ? 'bg-amber-500/20 text-amber-400' : 'bg-gray-700 hover:bg-red-500/20 hover:text-red-400 text-gray-400'}`}
-                      title={p.isSuspended ? 'Restore User' : 'Temp Suspend User'}
+                      title={p.isSuspended ? 'Restore User' : 'Suspend User'}
                     >
                       <UserX size={13} />
                     </button>
@@ -377,19 +401,42 @@ const LiveStudio = ({ session, onClose, onUpdateStatus }) => {
 
           {/* Live Chat Box */}
           <div className="flex-1 flex flex-col min-h-0 p-4 space-y-3">
-            <h3 className="font-heading font-extrabold text-xs uppercase tracking-wider text-gray-400 flex items-center gap-2">
-              <MessageSquare size={16} className="text-amber-400" /> Live Chat & Q&A
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="font-heading font-extrabold text-xs uppercase tracking-wider text-gray-400 flex items-center gap-2">
+                <MessageSquare size={16} className="text-amber-400" /> Live Chat & Q&A
+              </h3>
+              
+              {/* CHAT ENABLE/DISABLE SWITCH */}
+              <button 
+                onClick={toggleLiveChat}
+                className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase transition-all border ${
+                  chatEnabled 
+                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20' 
+                    : 'bg-red-500/10 text-red-400 border-red-500/30 hover:bg-red-500/20'
+                }`}
+              >
+                {chatEnabled ? 'Chat On' : 'Chat Off'}
+              </button>
+            </div>
 
             <div className="flex-1 bg-black/40 border border-gray-800 rounded-xl p-3 overflow-y-auto space-y-2.5 text-xs">
               {chatMessages.map(msg => (
-                <div key={msg.id} className={`p-2 rounded-xl border space-y-1 ${msg.isHost ? 'bg-amber-500/10 border-amber-500/30 text-amber-200' : msg.isSystem ? 'bg-gray-800/80 border-gray-700 text-gray-400 text-center italic' : 'bg-gray-800/40 border-gray-800 text-gray-300'}`}>
-                  {!msg.isSystem && (
-                    <div className="flex items-center justify-between text-[10px] font-bold text-gray-400">
-                      <span className={msg.isHost ? 'text-amber-400 font-extrabold' : 'text-gray-300'}>{msg.sender}</span>
-                      <span>{msg.time}</span>
+                <div key={msg.messageId} className={`p-2 rounded-xl border space-y-1 ${msg.senderRole === 'admin' ? 'bg-amber-500/10 border-amber-500/30 text-amber-200' : 'bg-gray-800/40 border-gray-800 text-gray-300'}`}>
+                  <div className="flex items-center justify-between text-[10px] font-bold text-gray-400">
+                    <span className={msg.senderRole === 'admin' ? 'text-amber-400 font-extrabold' : 'text-gray-300'}>{msg.senderName}</span>
+                    <div className="flex items-center gap-2">
+                      <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      
+                      {/* DELETE COMMENT BUTTON */}
+                      <button 
+                        onClick={() => handleDeleteComment(msg.messageId)}
+                        className="text-red-400 hover:text-red-500 p-0.5"
+                        title="Delete comment"
+                      >
+                        <Trash2 size={11} />
+                      </button>
                     </div>
-                  )}
+                  </div>
                   <p className="leading-snug">{msg.text}</p>
                 </div>
               ))}
