@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Phone, Mail, Search, Globe, ChevronRight } from 'lucide-react';
+import { 
+  Menu, X, Phone, Mail, Search, Globe, ChevronRight, 
+  User, LayoutDashboard, LogOut, ShieldCheck, Sparkles 
+} from 'lucide-react';
 import store from '../data/mockStore';
 import { translations } from '../data/translations';
 
@@ -10,10 +13,12 @@ export default function Navbar({ currentUser, onLogout, currentLang = 'EN', onLa
   const [searchExpanded, setSearchExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
-  
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+
   const location = useLocation();
   const navigate = useNavigate();
   const searchRef = useRef(null);
+  const userMenuRef = useRef(null);
 
   const t = translations[currentLang]?.nav || translations.EN.nav;
 
@@ -27,13 +32,17 @@ export default function Navbar({ currentUser, onLogout, currentLang = 'EN', onLa
     setMobileOpen(false);
     setSearchExpanded(false);
     setSearchQuery('');
+    setUserMenuOpen(false);
   }, [location]);
 
-  // Click outside to collapse search
+  // Click outside to collapse search & user menu
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (searchRef.current && !searchRef.current.contains(e.target)) {
         setSearchExpanded(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setUserMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -70,89 +79,102 @@ export default function Navbar({ currentUser, onLogout, currentLang = 'EN', onLa
     { path: '/contact', label: t.contact },
   ];
 
-  const isActive = (path) => location.pathname === path;
-
   return (
-    <>
-      {/* Top Contact Bar */}
-      <div className="hidden lg:block bg-primary text-white/80 text-xs py-2">
-        <div className="max-w-7xl mx-auto px-4 lg:px-8 flex justify-between items-center">
+    <header className="sticky top-0 z-40 w-full transition-all duration-300">
+      {/* Top Header Contact Bar */}
+      <div className="bg-[#001233] text-white py-1.5 px-4 lg:px-8 border-b border-white/10 hidden sm:block">
+        <div className="max-w-7xl mx-auto flex items-center justify-between text-xs">
           <div className="flex items-center gap-6">
-            <a href="https://wa.me/+918885490091" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
-              <Phone size={13} /> WhatsApp: +91 8885490091
-            </a>
-            <a href="https://wa.me/+919014887314" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
-              <Phone size={13} /> WhatsApp: +91 9014887314
-            </a>
-            <a href="mailto:info@classconnect.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 hover:text-white transition-colors">
-              <Mail size={13} /> info@classconnect.com
-            </a>
+            <span className="flex items-center gap-1.5 text-slate-300 font-medium">
+              <Phone size={13} className="text-amber-400" />
+              <span>+91 93463 97827</span>
+            </span>
+            <span className="flex items-center gap-1.5 text-slate-300 font-medium">
+              <Mail size={13} className="text-amber-400" />
+              <span>support@classconnect.in</span>
+            </span>
           </div>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-amber-400 font-bold tracking-wider">
-              {currentLang === 'EN' ? '🌐 Bilingual Learning OS (EN)' : '🌐 ద్విభాషా విద్యా వర్క్‌స్పేస్ (TE)'}
+
+          <div className="flex items-center gap-4 text-slate-300">
+            <span className="text-[11px] font-bold text-amber-400 uppercase tracking-widest bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+              100% Bilingual OS (English & Telugu)
             </span>
           </div>
         </div>
       </div>
 
-      {/* Main Sticky Navbar */}
-      <header className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/95 backdrop-blur-md shadow-md py-3' : 'bg-white/90 backdrop-blur-md border-b border-gray-200/50 py-4'}`}>
-        <div className="max-w-7xl mx-auto px-4 lg:px-8 flex items-center justify-between gap-4">
+      {/* Main Glassmorphic Navigation Bar */}
+      <header className={`w-full transition-all duration-300 ${
+        scrolled 
+          ? 'bg-white/95 backdrop-blur-md shadow-md py-3 border-b border-gray-200/80' 
+          : 'bg-white py-4 border-b border-gray-200/50'
+      }`}>
+        <div className="max-w-7xl mx-auto px-4 lg:px-8 flex items-center justify-between">
           
-          {/* Brand Logo */}
-          <Link to="/" className="font-heading font-extrabold text-2xl flex items-center gap-0.5 flex-shrink-0">
-            <span className="text-primary">Class</span>
-            <span className="text-secondary-container">Connect</span>
+          {/* Logo Brand */}
+          <Link to="/" className="flex items-center gap-2 group">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#001845] to-[#002B70] text-amber-400 flex items-center justify-center font-heading font-extrabold text-xl shadow-lg group-hover:scale-105 transition-transform">
+              CC
+            </div>
+            <div>
+              <span className="font-heading font-extrabold text-xl sm:text-2xl text-gray-900 leading-none tracking-tight block">
+                Class<span className="text-amber-600">Connect</span>
+              </span>
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Bilingual Learning OS</span>
+            </div>
           </Link>
 
-          {/* Desktop Nav Links */}
-          <nav className="hidden lg:flex items-center gap-1">
-            {navLinks.map(link => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={`px-3.5 py-2 text-sm font-medium rounded-lg transition-colors relative ${
-                  isActive(link.path)
-                    ? 'text-primary-container font-semibold after:absolute after:bottom-0 after:left-3 after:right-3 after:h-0.5 after:bg-secondary-container after:rounded-full'
-                    : 'text-gray-600 hover:text-primary hover:bg-gray-100/60'
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
+          {/* Center Navigation Links (Desktop) */}
+          <nav className="hidden lg:flex items-center gap-7">
+            {navLinks.map((link) => {
+              const isActive = location.pathname === link.path;
+              return (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={`text-xs font-heading font-extrabold tracking-wider uppercase transition-colors relative py-1 ${
+                    isActive 
+                      ? 'text-amber-600 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-amber-500 after:rounded-full' 
+                      : 'text-gray-700 hover:text-amber-600'
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
           </nav>
 
-          {/* Right Action Icons: Compact Search + Language Switcher + User Auth */}
-          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0" ref={searchRef}>
+          {/* Right Header Action Tools */}
+          <div className="flex items-center gap-3">
             
-            {/* 1. Compact Search Bar (Icon by default, expands on click) */}
-            <div className="relative">
+            {/* 1. Small Search Magnifier Icon Button */}
+            <div className="relative" ref={searchRef}>
               {searchExpanded ? (
-                <div className="flex items-center bg-gray-100 border border-amber-400 rounded-2xl px-3 py-1.5 shadow-lg w-64 md:w-80 transition-all duration-300 animate-fade-in">
-                  <Search size={16} className="text-amber-500 mr-2 flex-shrink-0" />
-                  <input 
-                    type="text" 
-                    autoFocus
-                    placeholder={t.searchPlaceholder}
+                <div className="flex items-center bg-gray-100 border border-amber-500 rounded-full px-3 py-1.5 w-56 sm:w-64 shadow-inner animate-fade-in">
+                  <Search size={16} className="text-amber-600 mr-2 flex-shrink-0" />
+                  <input
+                    type="text"
+                    placeholder="Search courses..."
                     value={searchQuery}
                     onChange={(e) => handleSearchChange(e.target.value)}
-                    className="w-full bg-transparent text-xs text-gray-900 focus:outline-none"
+                    autoFocus
+                    className="w-full bg-transparent text-xs outline-none text-gray-900 placeholder:text-gray-400 font-medium"
                   />
-                  <button onClick={() => { setSearchExpanded(false); setSearchQuery(''); }} className="text-gray-400 hover:text-gray-700 p-0.5 ml-1">
-                    <X size={15} />
+                  <button 
+                    onClick={() => { setSearchExpanded(false); setSearchQuery(''); }}
+                    className="p-1 hover:bg-gray-200 rounded-full text-gray-500"
+                  >
+                    <X size={14} />
                   </button>
                 </div>
               ) : (
                 <button
                   onClick={() => setSearchExpanded(true)}
-                  className="p-2 rounded-xl bg-gray-100 hover:bg-amber-100 text-gray-700 hover:text-amber-600 border border-gray-200 transition-all shadow-sm flex items-center gap-1.5"
+                  className="p-2.5 rounded-full bg-gray-100 hover:bg-amber-100 text-gray-700 hover:text-amber-700 transition-all shadow-sm cursor-pointer"
                   aria-label="Search courses"
-                  title="Search Courses / శోధించండి"
+                  title="Search Courses"
                 >
                   <Search size={18} />
-                  <span className="hidden md:inline text-xs font-semibold">Search</span>
                 </button>
               )}
 
@@ -195,55 +217,97 @@ export default function Navbar({ currentUser, onLogout, currentLang = 'EN', onLa
               )}
             </div>
 
-            {/* 2. Compact Language Switcher Icon Button (Globe Icon) */}
-            <button
-              onClick={() => onLangChange && onLangChange(currentLang === 'EN' ? 'TE' : 'EN')}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-extrabold rounded-xl border border-amber-300 bg-gradient-to-r from-amber-50 to-amber-100 text-amber-900 hover:from-amber-100 hover:to-amber-200 transition-all shadow-sm active:scale-95"
-              aria-label="Switch language"
-              title="Switch Language (English / తెలుగు)"
-            >
-              <Globe size={16} className="text-amber-600 flex-shrink-0 animate-spin-slow" />
-              <span className="font-bold">{currentLang === 'EN' ? 'TE (తెలుగు)' : 'EN (English)'}</span>
-            </button>
+            {/* 2. Three-Line Dropdown Menu Button (Containing Language, Profile, Dashboard, Logout) */}
+            <div className="relative" ref={userMenuRef}>
+              <button
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                className="flex items-center gap-2 px-3 py-2 rounded-full border border-gray-200 hover:border-amber-500 bg-gray-50 hover:bg-amber-50/50 shadow-sm transition-all cursor-pointer"
+                title="User & Language Options"
+              >
+                <Menu size={18} className="text-gray-800" />
+                {currentUser ? (
+                  <div className="w-6 h-6 rounded-full bg-[#001845] text-amber-400 font-extrabold text-[11px] flex items-center justify-center shadow">
+                    {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                ) : (
+                  <User size={18} className="text-gray-500" />
+                )}
+              </button>
 
-            {/* 3. User Auth Controls: Profile when logged in, Login/Register when logged out */}
-            <div className="hidden sm:flex items-center gap-2">
-              {currentUser ? (
-                <>
-                  <Link 
-                    to={currentUser.role === 'admin' ? '/admin' : '/dashboard'} 
-                    className="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-heading font-extrabold bg-primary-container hover:bg-primary text-white rounded-xl transition-all shadow-md"
-                    title="View Profile & Dashboard"
+              {/* Clean 3-Line Dropdown Popover */}
+              {userMenuOpen && (
+                <div className="absolute top-full mt-2 right-0 bg-white rounded-2xl shadow-2xl border border-gray-200 p-3 z-50 w-64 space-y-1.5 animate-fade-in text-xs font-semibold">
+                  
+                  {/* Language Toggle */}
+                  <button
+                    onClick={() => { onLangChange && onLangChange(currentLang === 'EN' ? 'TE' : 'EN'); setUserMenuOpen(false); }}
+                    className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-amber-50 text-gray-800 transition-colors cursor-pointer"
                   >
-                    <div className="w-5 h-5 rounded-full bg-amber-400 text-gray-950 flex items-center justify-center text-[10px] font-extrabold">
-                      {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
+                    <div className="flex items-center gap-2">
+                      <Globe size={16} className="text-amber-600" />
+                      <span>Language</span>
                     </div>
-                    <span>Profile</span>
-                  </Link>
-                  <button onClick={onLogout} className="px-3 py-1.5 text-xs font-bold text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors">
-                    {t.logout}
+                    <span className="font-extrabold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md text-[11px]">
+                      {currentLang === 'EN' ? 'TE (తెలుగు)' : 'EN (English)'}
+                    </span>
                   </button>
-                </>
-              ) : (
-                <>
-                  <Link to="/register" className="px-3.5 py-1.5 text-xs font-bold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-xl transition-all shadow-sm">
-                    {t.register}
-                  </Link>
-                  <Link to="/login" className="px-3.5 py-1.5 text-xs font-bold bg-primary-container hover:bg-primary text-white rounded-xl transition-colors shadow-sm">
-                    {t.login}
-                  </Link>
-                </>
+
+                  <div className="border-t border-gray-100 my-1" />
+
+                  {currentUser ? (
+                    <>
+                      <div className="px-2.5 py-1 text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">
+                        Signed in as <strong className="text-gray-900 block truncate font-heading">{currentUser.name}</strong>
+                      </div>
+                      
+                      <Link
+                        to="/profile"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="w-full flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-blue-50 text-gray-900 font-bold transition-colors"
+                      >
+                        <ShieldCheck size={16} className="text-[#001845]" />
+                        <span>Profile & Aadhaar KYC</span>
+                      </Link>
+
+                      <Link
+                        to={currentUser.role === 'admin' ? '/admin' : '/dashboard'}
+                        onClick={() => setUserMenuOpen(false)}
+                        className="w-full flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-amber-50 text-gray-900 font-bold transition-colors"
+                      >
+                        <LayoutDashboard size={16} className="text-amber-600" />
+                        <span>{currentUser.role === 'admin' ? 'Admin CMS' : 'Student Dashboard'}</span>
+                      </Link>
+
+                      <button
+                        onClick={() => { onLogout && onLogout(); setUserMenuOpen(false); }}
+                        className="w-full flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-red-50 text-red-600 font-bold transition-colors cursor-pointer"
+                      >
+                        <LogOut size={16} />
+                        <span>Logout</span>
+                      </button>
+                    </>
+                  ) : (
+                    <div className="space-y-1.5 pt-1">
+                      <Link
+                        to="/login"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="w-full flex items-center justify-center p-2.5 rounded-xl bg-[#001845] hover:bg-[#002B70] text-white font-heading font-extrabold uppercase text-[11px] tracking-wider transition-all shadow"
+                      >
+                        Sign In / Login
+                      </Link>
+                      <Link
+                        to="/register"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="w-full flex items-center justify-center p-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-gray-950 font-heading font-extrabold uppercase text-[11px] tracking-wider transition-all shadow"
+                      >
+                        Register Account
+                      </Link>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
-            {/* Mobile Hamburger Button */}
-            <button
-              className="lg:hidden text-gray-700 p-2 focus:outline-none"
-              onClick={() => setMobileOpen(!mobileOpen)}
-              aria-label="Toggle menu"
-            >
-              {mobileOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
           </div>
         </div>
       </header>
@@ -256,56 +320,52 @@ export default function Navbar({ currentUser, onLogout, currentLang = 'EN', onLa
       <div className={`fixed top-0 right-0 w-80 max-w-[85vw] h-full bg-white z-50 shadow-2xl transition-transform duration-300 lg:hidden flex flex-col ${mobileOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <Link to="/" className="font-heading font-extrabold text-xl">
-            <span className="text-primary">Class</span>
-            <span className="text-secondary-container">Connect</span>
+            <span className="text-gray-900">Class</span>
+            <span className="text-amber-600">Connect</span>
           </Link>
-          <button onClick={() => setMobileOpen(false)} className="text-gray-700 p-1" aria-label="Close menu">
-            <X size={24} />
+          <button onClick={() => setMobileOpen(false)} className="p-2 text-gray-500">
+            <X size={20} />
           </button>
         </div>
 
-        {/* Mobile Nav Links */}
-        <nav className="py-2 flex flex-col">
-          {navLinks.map(link => (
+        <nav className="p-4 space-y-2 flex-grow">
+          {navLinks.map((link) => (
             <Link
               key={link.path}
               to={link.path}
-              className={`px-6 py-3 text-base font-medium transition-colors border-l-4 ${
-                isActive(link.path)
-                  ? 'text-primary-container bg-primary-container/10 border-secondary-container font-semibold'
-                  : 'text-gray-700 hover:bg-gray-50 border-transparent'
-              }`}
+              className="block px-4 py-3 rounded-xl font-heading font-extrabold text-sm text-gray-800 hover:bg-amber-50 hover:text-amber-700"
             >
               {link.label}
             </Link>
           ))}
-        </nav>
 
-        <div className="mt-auto p-5 border-t border-gray-200 flex flex-col gap-3">
           {currentUser ? (
             <>
-              <Link to={currentUser.role === 'admin' ? '/admin' : '/dashboard'} className="w-full py-2.5 text-center text-sm font-extrabold bg-primary-container text-white rounded-xl shadow-md flex items-center justify-center gap-2">
-                <div className="w-5 h-5 rounded-full bg-amber-400 text-gray-950 flex items-center justify-center text-[10px] font-extrabold">
-                  {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
-                </div>
-                <span>Profile & Dashboard</span>
+              <Link
+                to="/profile"
+                className="block px-4 py-3 rounded-xl font-heading font-extrabold text-sm text-[#001845] bg-blue-50"
+              >
+                Profile & Aadhaar KYC
               </Link>
-              <button onClick={() => { onLogout(); setMobileOpen(false); }} className="w-full py-2.5 text-center text-sm font-semibold bg-gray-100 text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-xl transition-colors">
-                {t.logout}
-              </button>
+              <Link
+                to={currentUser.role === 'admin' ? '/admin' : '/dashboard'}
+                className="block px-4 py-3 rounded-xl font-heading font-extrabold text-sm text-amber-800 bg-amber-50"
+              >
+                {currentUser.role === 'admin' ? 'Admin CMS' : 'Student Dashboard'}
+              </Link>
             </>
           ) : (
-            <>
-              <Link to="/register" className="w-full py-2.5 text-center text-sm font-semibold bg-amber-500 text-white rounded-xl">
-                {t.register}
+            <div className="pt-4 space-y-2 border-t border-gray-100">
+              <Link to="/register" className="block w-full py-3 text-center bg-amber-500 text-gray-950 font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl shadow">
+                Register Account
               </Link>
-              <Link to="/login" className="w-full py-2.5 text-center text-sm font-semibold bg-primary-container text-white rounded-xl">
-                {t.login}
+              <Link to="/login" className="block w-full py-3 text-center bg-[#001845] text-white font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl shadow">
+                Sign In
               </Link>
-            </>
+            </div>
           )}
-        </div>
+        </nav>
       </div>
-    </>
+    </header>
   );
 }

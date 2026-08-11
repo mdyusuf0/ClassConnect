@@ -592,10 +592,54 @@ const defaultTestimonials = [
 ];
 
 const defaultVideoTestimonials = [
-  { id: 'vt1', title: 'Student Success Story 1', videoUrl: '' },
-  { id: 'vt2', title: 'Student Success Story 2', videoUrl: '' },
-  { id: 'vt3', title: 'Student Success Story 3', videoUrl: '' },
-  { id: 'vt4', title: 'Student Success Story 4', videoUrl: '' },
+  { 
+    id: 'vt1', 
+    name: 'Kavya Reddy',
+    role: 'Fullstack Web Developer',
+    courseTag: 'React 19 & Node Masterclass',
+    badge: '300% SALARY HIKE',
+    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop',
+    thumbnail: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=600&h=800&fit=crop',
+    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    quote: 'From zero coding background to landing my dream Fullstack role in 90 days!',
+    rating: 5,
+  },
+  { 
+    id: 'vt2', 
+    name: 'Venkatesh Rao',
+    role: 'Performance Marketing Lead',
+    courseTag: 'Google Ads & Meta Mastery',
+    badge: '₹1.2L MONTHLY REVENUE',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop',
+    thumbnail: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&h=800&fit=crop',
+    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    quote: 'ClassConnect live ad campaign labs gave me real budget handling confidence!',
+    rating: 5,
+  },
+  { 
+    id: 'vt3', 
+    name: 'Srikanth Sharma',
+    role: 'AI Prompt Engineer',
+    courseTag: 'ChatGPT & Generative AI Tools',
+    badge: 'AUTOMATED WORKFLOWS',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop',
+    thumbnail: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=600&h=800&fit=crop',
+    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    quote: 'Learned AI automation tools in Telugu and doubled my freelance productivity!',
+    rating: 5,
+  },
+  { 
+    id: 'vt4', 
+    name: 'Ananya Varma',
+    role: 'UI/UX Visual Designer',
+    courseTag: 'Figma & Design Systems',
+    badge: 'TOP DESIGNER CREATOR',
+    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop',
+    thumbnail: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=600&h=800&fit=crop',
+    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    quote: 'The 1-on-1 portfolio review sessions helped me build a world-class Figma portfolio.',
+    rating: 5,
+  },
 ];
 
 const indianStates = [
@@ -1033,7 +1077,35 @@ const store = {
   },
 
   getVideoTestimonials() {
-    return this.getData().videoTestimonials;
+    return this.getData().videoTestimonials || [];
+  },
+
+  addVideoTestimonial(videoData) {
+    const data = this.getData();
+    if (!data.videoTestimonials) data.videoTestimonials = [];
+    const newVt = {
+      id: 'vt-' + Date.now(),
+      name: videoData.name || 'ClassConnect Student',
+      role: videoData.role || 'Digital Learner',
+      courseTag: videoData.courseTag || 'Masterclass',
+      badge: videoData.badge || 'SUCCESS STORY',
+      avatar: videoData.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&h=150&fit=crop',
+      thumbnail: videoData.thumbnail || 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&h=800&fit=crop',
+      videoUrl: videoData.videoUrl || 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+      quote: videoData.quote || 'Learning on ClassConnect transformed my career!',
+      rating: parseInt(videoData.rating) || 5,
+      createdAt: new Date().toISOString()
+    };
+    data.videoTestimonials.push(newVt);
+    saveData(data);
+    return newVt;
+  },
+
+  deleteVideoTestimonial(id) {
+    const data = this.getData();
+    if (!data.videoTestimonials) return;
+    data.videoTestimonials = data.videoTestimonials.filter(v => v.id !== id);
+    saveData(data);
   },
 
   addVideoTestimonial(vt) {
@@ -1111,6 +1183,20 @@ const store = {
     return user || null;
   },
 
+  updateUserProfile(userId, profileData) {
+    const data = this.getData();
+    const user = data.users.find(u => u.id === userId);
+    if (user) {
+      Object.assign(user, profileData);
+      if (profileData.aadhaarNumber && profileData.aadhaarNumber.trim().length === 12) {
+        user.aadhaarVerified = true;
+      }
+      saveData(data);
+      return user;
+    }
+    return null;
+  },
+
   updateUserBankDetails(userId, bankDetails) {
     const data = this.getData();
     const user = data.users.find(u => u.id === userId);
@@ -1125,20 +1211,27 @@ const store = {
     return this.getData().referralLog;
   },
 
-  getReferralsByUser(userId) {
+  getReferralsForUser(userId) {
     return this.getReferralLog().filter(r => r.referrerId === userId);
   },
 
   // Payout Requests
-  requestPayout(userId, amount) {
+  requestPayout(userId, amount, upiId) {
     const data = this.getData();
     const user = data.users.find(u => u.id === userId);
+    
+    // MANDATORY SECURITY RULE: Aadhaar Verification required
+    if (!user || (!user.aadhaarVerified && (!user.aadhaarNumber || user.aadhaarNumber.trim().length < 12))) {
+      throw new Error("Security Policy Violation: 12-digit Aadhaar Verification is mandatory before requesting referral commission money transfers. Please update your profile with your Aadhaar Number.");
+    }
+
     if (user && user.pendingPayout >= amount) {
       const request = {
         id: 'payout-' + Date.now(),
         userId,
         userName: user.name,
         amount,
+        upiId: upiId || user.bankDetails?.upiId || 'user@upi',
         bankDetails: user.bankDetails,
         status: 'pending',
         requestDate: new Date().toISOString(),
