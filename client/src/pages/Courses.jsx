@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import store from '../data/mockStore';
+import api from '../api/client';
 import { Clock, Heart } from 'lucide-react';
 import { translations } from '../data/translations';
 
 export default function Courses({ currentLang = 'EN' }) {
   const [activeTab, setActiveTab] = useState('All');
   const [favorites, setFavorites] = useState({});
+  const [courses, setCourses] = useState([]);
 
   const t = translations[currentLang]?.coursesPage || translations.EN.coursesPage;
   const tc = translations[currentLang]?.common || translations.EN.common;
@@ -20,9 +21,17 @@ export default function Courses({ currentLang = 'EN' }) {
     { id: 'Business', label: t.tabs.business },
   ];
 
-  const filteredCourses = activeTab === 'All' 
-    ? store.getCourses() 
-    : store.getCoursesByCategory(activeTab);
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const data = await api.getCoursesApi(activeTab);
+        setCourses(data || []);
+      } catch (err) {
+        console.warn('Failed to load dynamic courses:', err.message);
+      }
+    };
+    fetchCourses();
+  }, [activeTab]);
 
   const toggleFavorite = (id, e) => {
     e.preventDefault();
@@ -64,8 +73,8 @@ export default function Courses({ currentLang = 'EN' }) {
         {/* Courses Grid with display viewport bounds */}
         <div className="max-h-[calc(100vh-260px)] overflow-y-auto pr-2 pb-6 custom-scrollbar">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredCourses.map(course => (
-            <div key={course.id} className="premium-course-card group">
+          {courses.map(course => (
+            <div key={course.id || course._id} className="premium-course-card group">
                 <div className="card-media-wrapper">
                   <img src={course.thumbnail} alt={course.title} className="card-media-img" />
                   
@@ -73,10 +82,10 @@ export default function Courses({ currentLang = 'EN' }) {
                   <div className="absolute top-3 right-3 z-10">
                     <button 
                       className="favorite-glass-btn"
-                      onClick={(e) => toggleFavorite(course.id, e)}
+                      onClick={(e) => toggleFavorite(course.id || course._id, e)}
                       aria-label="Save course"
                     >
-                      <Heart size={16} fill={favorites[course.id] ? '#EE4A03' : 'none'} color={favorites[course.id] ? '#EE4A03' : '#FFFFFF'} />
+                      <Heart size={16} fill={favorites[course.id || course._id] ? '#EE4A03' : 'none'} color={favorites[course.id || course._id] ? '#EE4A03' : '#FFFFFF'} />
                     </button>
                   </div>
                 </div>
@@ -86,7 +95,7 @@ export default function Courses({ currentLang = 'EN' }) {
                   <p className="card-course-desc">{course.description}</p>
                   <div className="card-divider"></div>
                   <div className="card-footer-row">
-                    <Link to={`/course/${course.id}`} className="card-action-btn">
+                    <Link to={`/course/${course.id || course._id}`} className="card-action-btn">
                       {tc.explore}
                     </Link>
                     <div className="card-price-block">
@@ -106,7 +115,7 @@ export default function Courses({ currentLang = 'EN' }) {
           </div>
         </div>
 
-        {filteredCourses.length === 0 && (
+        {courses.length === 0 && (
           <div className="bg-white rounded-2xl p-12 text-center border border-gray-200">
             <p className="text-gray-500 text-base">{tc.noResult}</p>
           </div>

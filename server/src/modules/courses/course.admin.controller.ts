@@ -438,17 +438,127 @@ export const deleteLesson = async (req: Request, res: Response) => {
   }
 };
 
-// Bunny Upload Handler Stub Endpoint
+// Bunny Upload Handler Endpoint
 export const uploadAsset = async (req: Request, res: Response) => {
   try {
-    const { filename, folder } = req.body;
-    const dummyBuffer = Buffer.from('ClassConnect Dummy Asset Stream');
-    const result = await BunnyService.uploadFile(dummyBuffer, filename || 'asset.png', folder || 'thumbnails');
+    const { file, filename, folder } = req.body;
+    if (!file) {
+      return res.status(400).json({ success: false, error: 'File content (base64 string) is required' });
+    }
+
+    let base64Content = file;
+    if (file.includes(';base64,')) {
+      base64Content = file.split(';base64,')[1];
+    }
+    const fileBuffer = Buffer.from(base64Content, 'base64');
+    const cleanFolder: 'thumbnails' | 'videos' = folder === 'videos' ? 'videos' : 'thumbnails';
+
+    const result = await BunnyService.uploadFile(fileBuffer, filename || 'asset.png', cleanFolder);
 
     return res.status(200).json({
       success: true,
       message: 'Asset uploaded to Bunny storage successfully',
       result,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: (error as Error).message });
+  }
+};
+
+export const updateUnit = async (req: Request, res: Response) => {
+  try {
+    const { courseId, unitId } = req.params;
+    const { title, description } = req.body;
+
+    let course: any = null;
+    if (isDbConnected()) {
+      try {
+        course = await Course.findById(courseId);
+      } catch (e) {
+        course = inMemoryCourses.get(courseId);
+      }
+    } else {
+      course = inMemoryCourses.get(courseId) || Array.from(inMemoryCourses.values()).find(c => c._id === courseId || c.id === courseId);
+    }
+
+    if (!course) {
+      return res.status(404).json({ success: false, error: 'Course not found' });
+    }
+
+    const unit = course.units.find((u: IUnit) => u.id === unitId);
+    if (!unit) {
+      return res.status(404).json({ success: false, error: 'Unit not found' });
+    }
+
+    if (title !== undefined) unit.title = title;
+    if (description !== undefined) unit.description = description;
+
+    if (isDbConnected() && typeof course.save === 'function') {
+      await course.save();
+    } else {
+      inMemoryCourses.set(String(course._id || course.id), course);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Unit updated successfully',
+      unit,
+      units: course.units,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: (error as Error).message });
+  }
+};
+
+export const updateLesson = async (req: Request, res: Response) => {
+  try {
+    const { courseId, unitId, lessonId } = req.params;
+    const { title, description, duration, videoUrl, bunnyVideoId, isFreePreview, type } = req.body;
+
+    let course: any = null;
+    if (isDbConnected()) {
+      try {
+        course = await Course.findById(courseId);
+      } catch (e) {
+        course = inMemoryCourses.get(courseId);
+      }
+    } else {
+      course = inMemoryCourses.get(courseId) || Array.from(inMemoryCourses.values()).find(c => c._id === courseId || c.id === courseId);
+    }
+
+    if (!course) {
+      return res.status(404).json({ success: false, error: 'Course not found' });
+    }
+
+    const unit = course.units.find((u: IUnit) => u.id === unitId);
+    if (!unit) {
+      return res.status(404).json({ success: false, error: 'Unit not found' });
+    }
+
+    const lesson = unit.lessons.find((l: ILesson) => l.id === lessonId);
+    if (!lesson) {
+      return res.status(404).json({ success: false, error: 'Lesson not found' });
+    }
+
+    if (title !== undefined) lesson.title = title;
+    if (description !== undefined) lesson.description = description;
+    if (duration !== undefined) lesson.duration = Number(duration);
+    if (videoUrl !== undefined) lesson.videoUrl = videoUrl;
+    if (bunnyVideoId !== undefined) lesson.bunnyVideoId = bunnyVideoId;
+    if (isFreePreview !== undefined) lesson.isFreePreview = !!isFreePreview;
+    if (type !== undefined) lesson.type = type;
+
+    if (isDbConnected() && typeof course.save === 'function') {
+      await course.save();
+    } else {
+      inMemoryCourses.set(String(course._id || course.id), course);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Lesson updated successfully',
+      lesson,
+      unit,
     });
   } catch (error) {
     return res.status(500).json({ success: false, error: (error as Error).message });

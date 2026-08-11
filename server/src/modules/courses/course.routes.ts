@@ -12,6 +12,8 @@ import {
   addLesson,
   deleteLesson,
   uploadAsset,
+  updateUnit,
+  updateLesson,
 } from './course.admin.controller.js';
 import { authenticate, authorize } from '../../middleware/auth.middleware.js';
 
@@ -34,9 +36,11 @@ router.delete('/admin/courses/:id', authenticate, authorize('admin'), deleteCour
 // Unit & Lesson Management Routes
 router.post('/admin/courses/:courseId/units', authenticate, authorize('admin'), addUnit);
 router.put('/admin/courses/:courseId/units/reorder', authenticate, authorize('admin'), reorderUnits);
+router.put('/admin/courses/:courseId/units/:unitId', authenticate, authorize('admin'), updateUnit);
 router.delete('/admin/courses/:courseId/units/:unitId', authenticate, authorize('admin'), deleteUnit);
 
 router.post('/admin/courses/:courseId/units/:unitId/lessons', authenticate, authorize('admin'), addLesson);
+router.put('/admin/courses/:courseId/units/:unitId/lessons/:lessonId', authenticate, authorize('admin'), updateLesson);
 router.delete('/admin/courses/:courseId/units/:unitId/lessons/:lessonId', authenticate, authorize('admin'), deleteLesson);
 
 // Bunny Upload Route

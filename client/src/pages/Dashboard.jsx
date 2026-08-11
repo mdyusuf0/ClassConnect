@@ -5,7 +5,7 @@ import {
   TrendingUp, Clock, CreditCard, Menu, X, Sparkles, ArrowRight, Radio, 
   Play, ShieldCheck, Award, Lock, DollarSign, Wallet
 } from 'lucide-react';
-import store from '../data/mockStore';
+import api from '../api/client';
 import LiveViewer from '../components/LiveViewer';
 
 const Dashboard = ({ currentUser, onLogout }) => {
@@ -18,6 +18,7 @@ const Dashboard = ({ currentUser, onLogout }) => {
   const [enrolledPackage, setEnrolledPackage] = useState(null);
   const [liveSessions, setLiveSessions] = useState([]);
   const [activeLiveSession, setActiveLiveSession] = useState(null);
+  const [courses, setCourses] = useState([]);
 
   const [upiId, setUpiId] = useState('');
   const [payoutAmount, setPayoutAmount] = useState('');
@@ -28,28 +29,42 @@ const Dashboard = ({ currentUser, onLogout }) => {
     loadDashboardData();
   }, [currentUser]);
 
-  // Listen to global store update events for dynamic multi-tab sync
-  useEffect(() => {
-    const handleStoreUpdate = () => loadDashboardData();
-    window.addEventListener('classconnect_store_update', handleStoreUpdate);
-    return () => window.removeEventListener('classconnect_store_update', handleStoreUpdate);
-  }, []);
-
-  const loadDashboardData = () => {
+  const loadDashboardData = async () => {
     if (!currentUser) return;
-    const userReferrals = store.getReferralsForUser ? store.getReferralsForUser(currentUser.id) : [];
-    setReferrals(userReferrals);
+    try {
+      const coursesData = await api.getCoursesApi('All');
+      setCourses(coursesData || []);
 
-    if (currentUser.enrolledPackage || currentUser.packageId) {
-      const pkg = store.getPackageById(currentUser.enrolledPackage || currentUser.packageId);
-      setEnrolledPackage(pkg || null);
-    } else {
-      const defaultPkg = store.getPackages()?.[0];
-      setEnrolledPackage(defaultPkg || null);
+      try {
+        const refData = await api.getReferralDashboardApi();
+        setReferrals(refData.referrals || []);
+      } catch (e) {
+        console.warn('Failed to load referrals dashboard:', e.message);
+      }
+
+      try {
+        const pkgs = await api.getPackagesApi();
+        const pkgId = currentUser.enrolledPackage || currentUser.packageId;
+        const matchedPkg = pkgs.find(p => p.id === pkgId || p._id === pkgId) || pkgs[0];
+        setEnrolledPackage(matchedPkg || null);
+      } catch (e) {
+        console.warn('Failed to load package info:', e.message);
+      }
+
+      try {
+        const enrolled = currentUser.enrolledCourses || [];
+        const allSessions = [];
+        for (const courseId of enrolled) {
+          const sessions = await api.getStudentLiveClassesApi(courseId);
+          allSessions.push(...(sessions || []));
+        }
+        setLiveSessions(allSessions);
+      } catch (e) {
+        console.warn('Failed to load student live classes:', e.message);
+      }
+    } catch (err) {
+      console.warn('Failed to load student dashboard:', err.message);
     }
-
-    const sessions = store.getLiveSessions ? store.getLiveSessions() : [];
-    setLiveSessions(sessions);
   };
 
   if (!currentUser) {
@@ -75,7 +90,7 @@ const Dashboard = ({ currentUser, onLogout }) => {
     setTimeout(() => setCopied(false), 2500);
   };
 
-  const handleRequestPayout = (e) => {
+  const handleRequestPayout = async (e) => {
     e.preventDefault();
     setPayoutMessage('');
     const amt = parseFloat(payoutAmount);
@@ -92,12 +107,14 @@ const Dashboard = ({ currentUser, onLogout }) => {
       return;
     }
 
-    if (store.requestPayout) {
-      store.requestPayout(currentUser.id, amt, upiId);
+    try {
+      await api.requestPayoutApi(amt, upiId);
+      setPayoutMessage('✨ Payout request submitted successfully! UPI transfer will be processed after encryption verification.');
+      setPayoutAmount('');
+      await loadDashboardData();
+    } catch (err) {
+      setPayoutMessage(err.message || 'Payout request failed.');
     }
-    setPayoutMessage('✨ Payout request submitted successfully! UPI transfer will be processed after encryption verification.');
-    setPayoutAmount('');
-    loadDashboardData();
   };
 
   return (
@@ -238,8 +255,8 @@ const Dashboard = ({ currentUser, onLogout }) => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {store.getCourses().map(course => (
-                <div key={course.id} className="bg-white rounded-3xl border border-gray-200/80 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+              {courses.map(course => (
+                <div key={course.id || course._id} className="bg-white rounded-3xl border border-gray-200/80 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                   <img src={course.thumbnail} alt={course.title} className="w-full h-44 object-cover" />
                   <div className="p-5 space-y-3">
                     <span className="text-[10px] font-extrabold uppercase text-amber-600 tracking-wider bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
@@ -247,7 +264,7 @@ const Dashboard = ({ currentUser, onLogout }) => {
                     </span>
                     <h3 className="font-heading font-extrabold text-lg text-gray-900">{course.title}</h3>
                     <p className="text-xs text-gray-500 line-clamp-2">{course.description}</p>
-                    <Link to={`/course/${course.id}`} className="w-full py-2.5 bg-[#001845] hover:bg-[#002B70] text-white font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 transition-all block text-center">
+                    <Link to={`/course/${course.id || course._id}`} className="w-full py-2.5 bg-[#001845] hover:bg-[#002B70] text-white font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 transition-all block text-center">
                       Watch Unit Lectures <Play size={14} />
                     </Link>
                   </div>

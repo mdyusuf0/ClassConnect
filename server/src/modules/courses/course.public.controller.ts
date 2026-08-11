@@ -162,54 +162,6 @@ export const getPublicCourseDetail = async (req: Request, res: Response) => {
     }
 
     if (!course) {
-      const mockCourses = [
-        {
-          _id: 'course_web_dev_101',
-          id: 'course_web_dev_101',
-          title: 'Full Stack Web Development Bootcamp',
-          slug: 'full-stack-web-development-bootcamp',
-          description: 'Master React, Node.js, Express, MongoDB, and modern web deployment from scratch.',
-          thumbnail: 'https://images.unsplash.com/photo-1587620962725-abab7fe55159?w=600&auto=format&fit=crop&q=80',
-          price: 99,
-          category: 'Web Development',
-          level: 'Beginner',
-          isPublished: true,
-          units: [
-            {
-              id: 'unit_web_1',
-              title: 'Unit 1: Modern HTML5, CSS3 & JavaScript Essentials',
-              description: 'Build responsive landing pages and interactive scripts',
-              order: 1,
-              lessons: [
-                {
-                  id: 'lesson_web_1_1',
-                  title: 'Lesson 1.1: Web Architecture Overview',
-                  description: 'HTTP protocol, DOM tree, client-server lifecycle',
-                  duration: 600,
-                  videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-                  isFreePreview: true,
-                  order: 1,
-                  type: 'recorded',
-                },
-                {
-                  id: 'lesson_web_1_2',
-                  title: 'Lesson 1.2: Modern JavaScript ES6+ Features',
-                  description: 'Async/await, destructuring, promises, array methods',
-                  duration: 900,
-                  videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-                  isFreePreview: false,
-                  order: 2,
-                  type: 'recorded',
-                },
-              ],
-            },
-          ],
-        },
-      ];
-      course = mockCourses.find((c) => c._id === slugOrId || c.slug === slugOrId || c.id === slugOrId) || mockCourses[0];
-    }
-
-    if (!course) {
       return res.status(404).json({ success: false, error: 'Course not found' });
     }
 
@@ -249,29 +201,7 @@ export const getSignedLessonStream = async (req: AuthenticatedRequest, res: Resp
     }
 
     if (!course) {
-      course = {
-        _id: courseId,
-        id: courseId,
-        units: [
-          {
-            id: 'unit_web_1',
-            lessons: [
-              {
-                id: 'lesson_web_1_1',
-                title: 'Lesson 1.1: Free Architecture Overview',
-                videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-                isFreePreview: true,
-              },
-              {
-                id: 'lesson_web_1_2',
-                title: 'Lesson 1.2: Paid ES6+ Video',
-                videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-                isFreePreview: false,
-              },
-            ],
-          },
-        ],
-      };
+      return res.status(404).json({ success: false, error: 'Course not found' });
     }
 
     // Locate target lesson across units
@@ -285,12 +215,7 @@ export const getSignedLessonStream = async (req: AuthenticatedRequest, res: Resp
     });
 
     if (!targetLesson) {
-      targetLesson = {
-        id: lessonId,
-        title: 'Target Lesson',
-        videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-        isFreePreview: false,
-      };
+      return res.status(404).json({ success: false, error: 'Lesson not found' });
     }
 
     // Free Preview Lessons: Accessible to anyone

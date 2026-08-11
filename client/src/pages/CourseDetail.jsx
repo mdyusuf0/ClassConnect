@@ -1,48 +1,60 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import store from '../data/mockStore';
+import api from '../api/client';
 import { Clock, BookOpen, BarChart, User, CheckCircle, ArrowLeft, PlayCircle, Video, Layers, Lock, Play } from 'lucide-react';
 
 export default function CourseDetail() {
   const { id } = useParams();
-  const course = store.getCourseById(Number(id) || id);
-  const packages = store.getPackages().filter(p => p.courses && p.courses.includes(course?.id));
+  const [course, setCourse] = useState(null);
+  const [packages, setPackages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeLesson, setActiveLesson] = useState(null);
+  const [videoSrc, setVideoSrc] = useState('');
 
-  // Determine units / lessons
-  const defaultUnits = course?.units && course.units.length > 0 ? course.units : [
-    {
-      unitNumber: 1,
-      title: 'Unit 1: Fundamentals & Environment Setup',
-      lessons: [
-        { id: 'l1', title: 'Lesson 1.1: Masterclass Overview & Roadmap', duration: '12:45', videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', isFreePreview: true },
-        { id: 'l2', title: 'Lesson 1.2: Essential Tools & Dashboard Walkthrough', duration: '18:20', videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4', isFreePreview: true },
-      ]
-    },
-    {
-      unitNumber: 2,
-      title: 'Unit 2: Hands-On Execution & Optimization',
-      lessons: [
-        { id: 'l3', title: 'Lesson 2.1: Practical Campaign Setup & Ad Copy', duration: '24:10', videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4', isFreePreview: false },
-        { id: 'l4', title: 'Lesson 2.2: Retargeting, Analytics & Scaling ROI', duration: '30:15', videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4', isFreePreview: false },
-      ]
-    }
-  ];
+  useEffect(() => {
+    const fetchDetails = async () => {
+      try {
+        setLoading(true);
+        const courseData = await api.getCourseDetailApi(id);
+        setCourse(courseData);
 
-  const [activeLesson, setActiveLesson] = useState(defaultUnits[0]?.lessons[0]);
-  const [videoSrc, setVideoSrc] = useState(
-    activeLesson?.videoUrl ? store.formatBunnyStreamUrl(activeLesson.videoUrl) : 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
-  );
+        const pkgs = await api.getPackagesApi();
+        const associatedPkgs = pkgs.filter(p => p.selectedCourses && p.selectedCourses.includes(id));
+        setPackages(associatedPkgs);
+
+        // Determine initial active lesson
+        const units = courseData?.units || [];
+        if (units.length > 0 && units[0].lessons?.length > 0) {
+          const firstLesson = units[0].lessons[0];
+          setActiveLesson(firstLesson);
+          setVideoSrc(firstLesson.videoUrl || '');
+        }
+      } catch (err) {
+        console.warn('Failed to load course details:', err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDetails();
+  }, [id]);
 
   const handleSelectLesson = (lesson) => {
     setActiveLesson(lesson);
-    const formatted = store.formatBunnyStreamUrl(lesson.videoUrl);
-    setVideoSrc(formatted);
+    setVideoSrc(lesson.videoUrl || '');
   };
 
   const handleVideoError = () => {
     // Fallback to sample video if Bunny Stream key is unreachable
     setVideoSrc('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4');
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F5F9FA] flex items-center justify-center p-6 text-center">
+        <div className="text-gray-500 font-bold text-sm">Loading course catalog modules...</div>
+      </div>
+    );
+  }
 
   if (!course) {
     return (
@@ -64,8 +76,6 @@ export default function CourseDetail() {
     "Build portfolio-ready projects demonstrating your expertise.",
     "Earn official digital certificate of completion upon finishing."
   ];
-
-  const coverImg = store.formatBunnyStorageUrl(course.thumbnail, 'courses');
 
   return (
     <div className="bg-[#F5F9FA] min-h-screen pb-16">
@@ -114,7 +124,7 @@ export default function CourseDetail() {
                   controls 
                   autoPlay={false}
                   onError={handleVideoError}
-                  poster={coverImg}
+                  poster={course.thumbnail}
                   className="w-full h-full object-cover"
                 >
                   <source src={videoSrc} type="video/mp4" />
@@ -127,10 +137,10 @@ export default function CourseDetail() {
                   <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
                     <Video size={13} /> Active Lecture Stream
                   </span>
-                  <h3 className="font-heading font-extrabold text-base text-white">{activeLesson?.title}</h3>
+                  <h3 className="font-heading font-extrabold text-base text-white">{activeLesson?.title || 'No active lesson'}</h3>
                 </div>
                 <span className="text-xs font-mono text-gray-400 bg-gray-800 px-3 py-1 rounded-lg border border-gray-700">
-                  {activeLesson?.duration || '15:00'}
+                  {activeLesson?.duration ? `${Math.round(activeLesson.duration / 60)} mins` : '15 mins'}
                 </span>
               </div>
             </div>
@@ -142,11 +152,11 @@ export default function CourseDetail() {
               </h2>
 
               <div className="space-y-4">
-                {defaultUnits.map((unit, uIdx) => (
-                  <div key={uIdx} className="bg-gray-50 border border-gray-200 rounded-2xl p-4 space-y-3">
+                {course.units?.map((unit, uIdx) => (
+                  <div key={unit.id} className="bg-gray-50 border border-gray-200 rounded-2xl p-4 space-y-3">
                     <div className="flex items-center justify-between border-b border-gray-200 pb-2">
                       <h4 className="font-heading font-extrabold text-sm text-primary-container uppercase tracking-wider">
-                        {unit.title || `Unit ${unit.unitNumber}`}
+                        {unit.title || `Unit ${uIdx + 1}`}
                       </h4>
                       <span className="text-xs font-bold text-gray-500">{unit.lessons?.length || 0} Lectures</span>
                     </div>
@@ -156,7 +166,7 @@ export default function CourseDetail() {
                         const isCurrent = activeLesson?.id === les.id;
                         return (
                           <div 
-                            key={lIdx}
+                            key={les.id}
                             onClick={() => handleSelectLesson(les)}
                             className={`p-3 rounded-xl border flex items-center justify-between transition-all cursor-pointer ${
                               isCurrent 
@@ -172,7 +182,7 @@ export default function CourseDetail() {
                             </div>
 
                             <div className="flex items-center gap-3">
-                              <span className="text-[11px] font-mono text-gray-500">{les.duration}</span>
+                              <span className="text-[11px] font-mono text-gray-500">{Math.round(les.duration / 60)} mins</span>
                               {les.isFreePreview ? (
                                 <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-extrabold rounded uppercase">Preview</span>
                               ) : (
@@ -226,12 +236,12 @@ export default function CourseDetail() {
               {packages.length > 0 ? (
                 <div className="space-y-3">
                   {packages.map(pkg => (
-                    <div key={pkg.id} className="p-4 rounded-2xl bg-[#F5F9FA] border border-gray-200 flex items-center justify-between">
+                    <div key={pkg.id || pkg._id} className="p-4 rounded-2xl bg-[#F5F9FA] border border-gray-200 flex items-center justify-between">
                       <div>
                         <h4 className="font-heading font-bold text-sm text-gray-900">{pkg.name}</h4>
                         <p className="text-xs font-bold text-amber-600">₹{pkg.price.toLocaleString('en-IN')}</p>
                       </div>
-                      <Link to={`/register?package=${pkg.id}`} className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-extrabold text-xs uppercase rounded-xl shadow">
+                      <Link to={`/register?package=${pkg.id || pkg._id}`} className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-extrabold text-xs uppercase rounded-xl shadow">
                         Enroll Now
                       </Link>
                     </div>

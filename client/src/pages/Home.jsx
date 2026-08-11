@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import store from '../data/mockStore.js';
+import api from '../api/client.js';
 import { 
   Star, Play, Clock, Users, Award, 
   ChevronRight, ChevronLeft, GraduationCap, Infinity, CheckCircle2, Heart, Zap, Globe, Sparkles, ArrowRight, Video, Quote, X, MessageSquare
@@ -43,10 +43,32 @@ const Counter = ({ target, duration = 2000, suffix = '' }) => {
 };
 
 export default function Home({ currentLang = 'EN' }) {
-  const courses = store.getCourses();
-  const packages = store.getPackages();
-  const testimonials = store.getTestimonials() || [];
-  const videoTestimonials = store.getVideoTestimonials ? store.getVideoTestimonials() : [];
+  const [courses, setCourses] = useState([]);
+  const [packages, setPackages] = useState([]);
+  const [testimonials, setTestimonials] = useState([]);
+  const [videoTestimonials, setVideoTestimonials] = useState([]);
+
+  useEffect(() => {
+    const fetchHomeData = async () => {
+      try {
+        const coursesData = await api.getCoursesApi('All');
+        setCourses(coursesData || []);
+
+        const packagesData = await api.getPackagesApi();
+        setPackages(packagesData || []);
+
+        const videoData = await api.getVideoStoriesApi();
+        setVideoTestimonials(videoData || []);
+
+        const reviewsData = await api.getAdminReviewsApi();
+        const approved = reviewsData ? reviewsData.filter(r => r.status === 'approved') : [];
+        setTestimonials(approved);
+      } catch (err) {
+        console.warn('Failed to load dynamic home data:', err.message);
+      }
+    };
+    fetchHomeData();
+  }, []);
 
   const [favorites, setFavorites] = useState({});
   const [activeVideoModal, setActiveVideoModal] = useState(null);
@@ -257,17 +279,17 @@ export default function Home({ currentLang = 'EN' }) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {courses.map(course => (
-              <div key={course.id} className="premium-course-card group">
+              <div key={course.id || course._id} className="premium-course-card group">
                 <div className="card-media-wrapper">
                   <img src={course.thumbnail} alt={course.title} className="card-media-img" />
                   
                   <div className="absolute top-3 right-3 z-10">
                     <button 
                       className="favorite-glass-btn"
-                      onClick={(e) => toggleFavorite(course.id, e)}
+                      onClick={(e) => toggleFavorite(course.id || course._id, e)}
                       aria-label="Save course"
                     >
-                      <Heart size={16} fill={favorites[course.id] ? '#EE4A03' : 'none'} color={favorites[course.id] ? '#EE4A03' : '#FFFFFF'} />
+                      <Heart size={16} fill={favorites[course.id || course._id] ? '#EE4A03' : 'none'} color={favorites[course.id || course._id] ? '#EE4A03' : '#FFFFFF'} />
                     </button>
                   </div>
                 </div>
@@ -277,7 +299,7 @@ export default function Home({ currentLang = 'EN' }) {
                   <p className="card-course-desc">{course.description}</p>
                   <div className="card-divider"></div>
                   <div className="card-footer-row">
-                    <Link to={`/course/${course.id}`} className="card-action-btn">
+                    <Link to={`/course/${course.id || course._id}`} className="card-action-btn">
                       {tc.explore}
                     </Link>
                     <div className="card-price-block">
