@@ -10,6 +10,7 @@ export interface IUser extends Document {
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
   enrolledCourses: string[];
+  isSuspended: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -50,6 +51,10 @@ const UserSchema: Schema<IUser> = new Schema(
     enrolledCourses: {
       type: [String],
       default: [],
+    },
+    isSuspended: {
+      type: Boolean,
+      default: false,
     },
   },
   {

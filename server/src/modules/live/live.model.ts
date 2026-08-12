@@ -11,6 +11,7 @@ export interface ILiveSession extends Document {
   scheduledAt: Date;
   duration: number; // in minutes
   status: LiveStatus;
+  chatEnabled: boolean;
   recordingUrl?: string;
   bunnyVideoId?: string;
   convertedLessonId?: string;
@@ -38,6 +39,7 @@ const LiveSessionSchema = new Schema<ILiveSession>(
     scheduledAt: { type: Date, required: true },
     duration: { type: Number, default: 60 },
     status: { type: String, enum: ['scheduled', 'live', 'ended', 'cancelled'], default: 'scheduled' },
+    chatEnabled: { type: Boolean, default: true },
     recordingUrl: { type: String, default: undefined },
     bunnyVideoId: { type: String, default: undefined },
     convertedLessonId: { type: String, default: undefined },

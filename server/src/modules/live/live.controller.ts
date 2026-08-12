@@ -339,3 +339,66 @@ export const getChatMessages = async (req: Request, res: Response) => {
     return res.status(500).json({ success: false, error: (error as Error).message });
   }
 };
+
+export const toggleChatEnabled = async (req: Request, res: Response) => {
+  try {
+    const { sessionId } = req.params;
+    const { chatEnabled } = req.body;
+
+    let session: any = null;
+    if (isDbConnected()) {
+      try {
+        session = await LiveSession.findOne({ sessionId });
+      } catch (e) {
+        session = inMemorySessions.get(sessionId);
+      }
+    } else {
+      session = inMemorySessions.get(sessionId) || Array.from(inMemorySessions.values()).find(s => s.sessionId === sessionId);
+    }
+
+    if (!session) {
+      return res.status(404).json({ success: false, error: 'Live session not found' });
+    }
+
+    session.chatEnabled = chatEnabled !== undefined ? !!chatEnabled : true;
+    if (isDbConnected() && typeof session.save === 'function') {
+      await session.save();
+    } else {
+      inMemorySessions.set(sessionId, session);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Chat ${session.chatEnabled ? 'enabled' : 'disabled'} successfully`,
+      session,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: (error as Error).message });
+  }
+};
+
+export const deleteChatMessage = async (req: Request, res: Response) => {
+  try {
+    const { sessionId, messageId } = req.params;
+    if (isDbConnected()) {
+      try {
+        await ChatMessage.findOneAndDelete({ sessionId, messageId });
+      } catch (e) {
+        const list = inMemoryChat.get(sessionId) || [];
+        const filtered = list.filter(m => m.messageId !== messageId);
+        inMemoryChat.set(sessionId, filtered);
+      }
+    } else {
+      const list = inMemoryChat.get(sessionId) || [];
+      const filtered = list.filter(m => m.messageId !== messageId);
+      inMemoryChat.set(sessionId, filtered);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Chat message deleted successfully',
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: (error as Error).message });
+  }
+};

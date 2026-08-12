@@ -7,6 +7,7 @@ import paymentRoutes from '../modules/payments/payment.routes.js';
 import referralRoutes from '../modules/referrals/referral.routes.js';
 import liveRoutes from '../modules/live/live.routes.js';
 import reviewRoutes from '../modules/reviews/review.routes.js';
+import videoStoryRoutes from '../modules/video-stories/video-story.routes.js';
 import analyticsRoutes from '../modules/analytics/analytics.routes.js';
 import { authenticate, authorize } from '../middleware/auth.middleware.js';
 
@@ -20,6 +21,7 @@ router.use('/', paymentRoutes);
 router.use('/', referralRoutes);
 router.use('/', liveRoutes);
 router.use('/', reviewRoutes);
+router.use('/', videoStoryRoutes);
 router.use('/', analyticsRoutes);
 
 // Role Protection Test Endpoints

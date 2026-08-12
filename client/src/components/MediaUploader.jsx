@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, Video, Image as ImageIcon, X, Play, CheckCircle2, AlertCircle } from 'lucide-react';
-import store from '../data/mockStore';
+import { Upload, Video, Image as ImageIcon, X, Play, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import api from '../api/client';
 
 const MediaUploader = ({ 
   value, 
@@ -12,6 +12,7 @@ const MediaUploader = ({
   const [preview, setPreview] = useState(value || '');
   const [isVideo, setIsVideo] = useState(false);
   const [error, setError] = useState('');
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     setPreview(value || '');
@@ -26,11 +27,13 @@ const MediaUploader = ({
     const file = e.target.files?.[0];
     if (!file) return;
     setError('');
+    setUploading(true);
 
     // Security & File Size Check (100MB max limit)
     const MAX_SIZE = 100 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
-      setError('File size exceeds 100MB security limit. Please choose a smaller file or enter a CDN stream URL.');
+      setError('File size exceeds 100MB security limit. Please choose a smaller file.');
+      setUploading(false);
       return;
     }
 
@@ -38,21 +41,28 @@ const MediaUploader = ({
     setIsVideo(isVideoFile);
 
     const reader = new FileReader();
-    reader.onloadend = () => {
+    reader.onloadend = async () => {
       const dataUrl = reader.result;
       setPreview(dataUrl);
 
-      // Format clean filename for Bunny Storage / Bunny Stream CDN reference
-      const cleanFileName = file.name.toLowerCase().replace(/[^a-z0-9.]/g, '-');
-      let cdnPath = '';
-      if (isVideoFile) {
-        cdnPath = store.formatBunnyStreamUrl(`${subfolder}/${cleanFileName}`);
-      } else {
-        cdnPath = store.formatBunnyStorageUrl(`${subfolder}/${cleanFileName}`, subfolder);
+      try {
+        const cleanFileName = file.name.toLowerCase().replace(/[^a-z0-9.]/g, '-');
+        const folder = isVideoFile ? 'videos' : 'thumbnails';
+        
+        // Upload via backend proxy to Bunny
+        const result = await api.uploadAssetApi(dataUrl, cleanFileName, folder);
+        
+        // Set actual Bunny CDN URL returned
+        const bunnyUrl = result.cdnUrl || result.url;
+        onChange(bunnyUrl);
+        setPreview(bunnyUrl);
+      } catch (err) {
+        console.warn('Bunny CDN upload failed:', err.message);
+        setError('Bunny CDN Upload failed. Using local preview fallback.');
+        onChange(dataUrl);
+      } finally {
+        setUploading(false);
       }
-
-      // Pass dataUrl (or fallback cdnPath) to parent handler
-      onChange(dataUrl || cdnPath);
     };
 
     reader.readAsDataURL(file);
@@ -80,7 +90,12 @@ const MediaUploader = ({
       )}
 
       <div className="relative group border-2 border-dashed border-gray-300 hover:border-amber-500 rounded-2xl p-4 bg-gray-50/90 hover:bg-amber-50/40 transition-all text-center flex flex-col items-center justify-center min-h-[140px]">
-        {preview ? (
+        {uploading ? (
+          <div className="flex flex-col items-center justify-center space-y-2 py-4">
+            <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
+            <p className="text-xs font-bold text-gray-700">Uploading file to Bunny Storage CDN...</p>
+          </div>
+        ) : preview ? (
           <div className="relative w-full flex flex-col items-center justify-center">
             {isVideo ? (
               <div className="w-full max-h-48 rounded-xl overflow-hidden bg-black shadow-md border border-gray-200 relative">

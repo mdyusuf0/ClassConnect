@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, ArrowRight, ArrowLeft, Lock, Mail, Sparkles, Award, Zap, CheckCircle2, KeyRound, X } from 'lucide-react';
-import store from '../data/mockStore.js';
+import { loginApi } from '../api/client';
 
 const Login = ({ currentUser, onLogin }) => {
   const navigate = useNavigate();
@@ -24,12 +24,17 @@ const Login = ({ currentUser, onLogin }) => {
     }
     const tokenCookie = getCookie('classconnect_token') || getCookie('token') || getCookie('session');
     const userCookie = getCookie('classconnect_user') || getCookie('user');
-    const localUser = localStorage.getItem('classconnect_user');
-    const localToken = localStorage.getItem('classconnect_token');
+    const localUser = localStorage.getItem('classconnect_user') || localStorage.getItem('user');
+    const localToken = localStorage.getItem('classconnect_token') || localStorage.getItem('token');
 
-    if (currentUser || tokenCookie || userCookie || localUser || localToken) {
+    const hasTokenCookie = tokenCookie && tokenCookie !== 'null' && tokenCookie !== 'undefined' && tokenCookie !== '';
+    const hasUserCookie = userCookie && userCookie !== 'null' && userCookie !== 'undefined' && userCookie !== '';
+    const hasLocalUser = localUser && localUser !== 'null' && localUser !== 'undefined' && localUser !== '';
+    const hasLocalToken = localToken && localToken !== 'null' && localToken !== 'undefined' && localToken !== '';
+
+    if (currentUser || hasTokenCookie || hasUserCookie || hasLocalUser || hasLocalToken) {
       let role = currentUser?.role;
-      if (!role && (userCookie || localUser)) {
+      if (!role && (hasUserCookie || hasLocalUser)) {
         try {
           const parsed = JSON.parse(userCookie || localUser);
           role = parsed?.role;
@@ -69,7 +74,7 @@ const Login = ({ currentUser, onLogin }) => {
     }
     
     try {
-      const user = await store.loginUser(email, password);
+      const user = await loginApi(email, password);
       if (user) {
         if (onLogin) onLogin(user);
         if (user.role === 'admin') {

@@ -5,7 +5,7 @@ import {
   CreditCard, MapPin, Building, Calendar, Phone, Mail, 
   BookOpen, Briefcase, Lock, ArrowLeft, Save, Sparkles, Shield
 } from 'lucide-react';
-import store from '../data/mockStore';
+import { updateProfileApi } from '../api/client';
 import MediaUploader from '../components/MediaUploader';
 
 const Profile = ({ currentUser, onUpdateUser }) => {
@@ -93,7 +93,7 @@ const Profile = ({ currentUser, onUpdateUser }) => {
 
   const isAadhaarVerified = formData.aadhaarNumber && formData.aadhaarNumber.trim().length === 12;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setSuccessMsg('');
     setErrorMsg('');
@@ -118,17 +118,13 @@ const Profile = ({ currentUser, onUpdateUser }) => {
       }
     };
 
-    if (store.updateUserProfile) {
-      store.updateUserProfile(currentUser.id, updatedProfile);
-    }
-
-    // Save to localStorage
-    const savedUser = JSON.parse(localStorage.getItem('classconnect_user') || '{}');
-    const newUserObj = { ...savedUser, ...updatedProfile };
-    localStorage.setItem('classconnect_user', JSON.stringify(newUserObj));
-
-    if (onUpdateUser) {
-      onUpdateUser(newUserObj);
+    try {
+      const updatedUser = await updateProfileApi(updatedProfile);
+      if (onUpdateUser) {
+        onUpdateUser(updatedUser);
+      }
+    } catch (err) {
+      alert(err.message || 'Failed to update profile.');
     }
 
     setTimeout(() => {

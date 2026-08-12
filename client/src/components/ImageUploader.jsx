@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, Image as ImageIcon, X } from 'lucide-react';
-import store from '../data/mockStore';
+import { Upload, Image as ImageIcon, X, Loader2 } from 'lucide-react';
+import api from '../api/client';
 
 const ImageUploader = ({ value, onChange, label = 'Upload Image', subfolder = 'courses' }) => {
   const [preview, setPreview] = useState(value || '');
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     setPreview(value || '');
@@ -13,17 +14,28 @@ const ImageUploader = ({ value, onChange, label = 'Upload Image', subfolder = 'c
     const file = e.target.files?.[0];
     if (!file) return;
 
+    setUploading(true);
     const reader = new FileReader();
-    reader.onloadend = () => {
+    reader.onloadend = async () => {
       const dataUrl = reader.result;
       setPreview(dataUrl);
 
-      // Generate Bunny Storage CDN path for storage reference
-      const cleanFileName = file.name.toLowerCase().replace(/[^a-z0-9.]/g, '-');
-      const bunnyPath = store.formatBunnyStorageUrl(`${subfolder}/${cleanFileName}`, subfolder);
-
-      // Pass dataUrl (or fallback bunnyPath) to parent state handler
-      onChange(dataUrl || bunnyPath);
+      try {
+        const cleanFileName = file.name.toLowerCase().replace(/[^a-z0-9.]/g, '-');
+        
+        // Upload to Bunny
+        const result = await api.uploadAssetApi(dataUrl, cleanFileName, subfolder);
+        
+        // Set Bunny CDN URL
+        const bunnyUrl = result.cdnUrl || result.url;
+        onChange(bunnyUrl);
+        setPreview(bunnyUrl);
+      } catch (err) {
+        console.warn('Bunny CDN upload failed:', err.message);
+        onChange(dataUrl);
+      } finally {
+        setUploading(false);
+      }
     };
     reader.readAsDataURL(file);
   };
@@ -38,7 +50,12 @@ const ImageUploader = ({ value, onChange, label = 'Upload Image', subfolder = 'c
       <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">{label}</label>
       
       <div className="relative group border-2 border-dashed border-gray-300 hover:border-amber-500 rounded-2xl p-4 bg-gray-50/80 hover:bg-amber-50/40 transition-all text-center flex flex-col items-center justify-center min-h-[130px]">
-        {preview ? (
+        {uploading ? (
+          <div className="flex flex-col items-center justify-center space-y-1.5 py-3">
+            <Loader2 className="w-6 h-6 text-amber-500 animate-spin" />
+            <p className="text-[10px] font-bold text-gray-700">Uploading to Bunny Storage...</p>
+          </div>
+        ) : preview ? (
           <div className="relative w-full flex flex-col items-center justify-center">
             <img src={preview} alt="Uploaded Preview" className="h-28 max-w-full object-cover rounded-xl shadow-md border border-gray-200" />
             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 transition-opacity rounded-xl">

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Eye, EyeOff, ArrowRight, ArrowLeft, CheckCircle2, ShieldCheck, Info, ChevronDown, Sparkles, Award, Zap } from 'lucide-react';
-import store, { indianStates } from '../data/mockStore.js';
+import api from '../api/client.js';
+import { indianStates } from '../data/mockStore.js';
 
 const Register = ({ currentUser, onLogin }) => {
   const navigate = useNavigate();
@@ -16,12 +17,17 @@ const Register = ({ currentUser, onLogin }) => {
     }
     const tokenCookie = getCookie('classconnect_token') || getCookie('token') || getCookie('session');
     const userCookie = getCookie('classconnect_user') || getCookie('user');
-    const localUser = localStorage.getItem('classconnect_user');
-    const localToken = localStorage.getItem('classconnect_token');
+    const localUser = localStorage.getItem('classconnect_user') || localStorage.getItem('user');
+    const localToken = localStorage.getItem('classconnect_token') || localStorage.getItem('token');
 
-    if (currentUser || tokenCookie || userCookie || localUser || localToken) {
+    const hasTokenCookie = tokenCookie && tokenCookie !== 'null' && tokenCookie !== 'undefined' && tokenCookie !== '';
+    const hasUserCookie = userCookie && userCookie !== 'null' && userCookie !== 'undefined' && userCookie !== '';
+    const hasLocalUser = localUser && localUser !== 'null' && localUser !== 'undefined' && localUser !== '';
+    const hasLocalToken = localToken && localToken !== 'null' && localToken !== 'undefined' && localToken !== '';
+
+    if (currentUser || hasTokenCookie || hasUserCookie || hasLocalUser || hasLocalToken) {
       let role = currentUser?.role;
-      if (!role && (userCookie || localUser)) {
+      if (!role && (hasUserCookie || hasLocalUser)) {
         try {
           const parsed = JSON.parse(userCookie || localUser);
           role = parsed?.role;
@@ -51,15 +57,22 @@ const Register = ({ currentUser, onLogin }) => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const allPackages = store.getPackages();
-    setPackages(allPackages);
+    const fetchPackages = async () => {
+      try {
+        const allPackages = await api.getPackagesApi();
+        setPackages(allPackages || []);
 
-    if (preSelectedPackageId) {
-      const match = allPackages.find(p => p.id === preSelectedPackageId);
-      if (match) {
-        setSelectedPlan(match);
+        if (preSelectedPackageId) {
+          const match = allPackages.find(p => p.id === preSelectedPackageId);
+          if (match) {
+            setSelectedPlan(match);
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to load register packages:', err.message);
       }
-    }
+    };
+    fetchPackages();
   }, [preSelectedPackageId]);
 
   const handleChange = (e) => {
@@ -113,7 +126,7 @@ const Register = ({ currentUser, onLogin }) => {
     }
 
     try {
-      const user = await store.registerUser(formData);
+      const user = await api.registerApi(formData);
       if (user) {
         if (onLogin) onLogin(user);
         navigate('/dashboard');

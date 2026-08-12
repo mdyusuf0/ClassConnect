@@ -142,6 +142,10 @@ export const login = async (req: Request, res: Response) => {
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
 
+    if (user.isSuspended) {
+      return res.status(403).json({ success: false, error: 'Account Suspended: Access restricted.' });
+    }
+
     const payload = { userId: String(user._id || user.id), email: user.email, role: user.role };
     const accessToken = generateAccessToken(payload);
     const refreshToken = generateRefreshToken(payload);
@@ -156,7 +160,14 @@ export const login = async (req: Request, res: Response) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        enrolledCourses: user.enrolledCourses,
+        isSuspended: user.isSuspended,
+        phone: user.phone,
+        address: user.address,
+        upiId: user.upiId,
+        kycAadhaar: user.kycAadhaar,
+        isKycSubmitted: user.isKycSubmitted,
+        enrolledCourses: user.enrolledCourses || [],
+        referralCode: user.referralCode,
       },
     });
   } catch (error) {
@@ -284,6 +295,10 @@ export const getMe = async (req: AuthenticatedRequest, res: Response) => {
       return res.status(404).json({ success: false, error: 'User not found' });
     }
 
+    if (user.isSuspended) {
+      return res.status(403).json({ success: false, error: 'Account Suspended: Access restricted.' });
+    }
+
     return res.status(200).json({
       success: true,
       user: {
@@ -291,7 +306,141 @@ export const getMe = async (req: AuthenticatedRequest, res: Response) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        isSuspended: user.isSuspended,
+        phone: user.phone,
+        address: user.address,
+        upiId: user.upiId,
+        kycAadhaar: user.kycAadhaar,
+        isKycSubmitted: user.isKycSubmitted,
         enrolledCourses: user.enrolledCourses || [],
+        referralCode: user.referralCode,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: (error as Error).message });
+  }
+};
+
+export const updateProfile = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const userId = req.user.userId;
+    const { name, phone, address, upiId, kycAadhaar, isKycSubmitted } = req.body;
+
+    let user: any = null;
+    if (isDbConnected()) {
+      try {
+        user = await User.findById(userId);
+      } catch (e) {
+        user = inMemoryUsers.get(userId);
+      }
+    } else {
+      user = inMemoryUsers.get(userId) || Array.from(inMemoryUsers.values()).find(u => u.id === userId || u._id === userId);
+    }
+
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    if (name !== undefined) user.name = name;
+    if (phone !== undefined) user.phone = phone;
+    if (address !== undefined) user.address = address;
+    if (upiId !== undefined) user.upiId = upiId;
+    if (kycAadhaar !== undefined) user.kycAadhaar = kycAadhaar;
+    if (isKycSubmitted !== undefined) user.isKycSubmitted = !!isKycSubmitted;
+
+    if (isDbConnected() && typeof user.save === 'function') {
+      await user.save();
+    } else {
+      inMemoryUsers.set(String(user._id || user.id), user);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      user: {
+        id: String(user._id || user.id),
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isSuspended: user.isSuspended,
+        phone: user.phone,
+        address: user.address,
+        upiId: user.upiId,
+        kycAadhaar: user.kycAadhaar,
+        isKycSubmitted: user.isKycSubmitted,
+        enrolledCourses: user.enrolledCourses || [],
+        referralCode: user.referralCode,
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: (error as Error).message });
+  }
+};
+
+// Admin User Management
+export const getAdminUsers = async (_req: Request, res: Response) => {
+  try {
+    let users: any[] = [];
+    if (isDbConnected()) {
+      try {
+        users = await User.find().sort({ createdAt: -1 });
+      } catch (e) {
+        users = Array.from(inMemoryUsers.values());
+      }
+    } else {
+      users = Array.from(inMemoryUsers.values());
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: users.length,
+      users: users.map(u => ({
+        id: String(u._id || u.id),
+        name: u.name,
+        email: u.email,
+        role: u.role,
+        isSuspended: !!u.isSuspended,
+        enrolledCourses: u.enrolledCourses || [],
+        createdAt: u.createdAt,
+      })),
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: (error as Error).message });
+  }
+};
+
+export const toggleUserSuspension = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const { isSuspended } = req.body;
+
+    let user = await findUserById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    user.isSuspended = !!isSuspended;
+    user.updatedAt = new Date();
+
+    if (isDbConnected() && typeof user.save === 'function') {
+      await user.save();
+    } else {
+      inMemoryUsers.set(userId, user);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `User status updated successfully to ${user.isSuspended ? 'Suspended' : 'Active'}`,
+      user: {
+        id: String(user._id || user.id),
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isSuspended: user.isSuspended,
       },
     });
   } catch (error) {
