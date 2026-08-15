@@ -1,11 +1,14 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/client.js';
+import store from '../data/mockStore.js';
 import { 
   Star, Play, Clock, Users, Award, 
   ChevronRight, ChevronLeft, GraduationCap, Infinity, CheckCircle2, Heart, Zap, Globe, Sparkles, ArrowRight, Video, Quote, X, MessageSquare
 } from 'lucide-react';
 import { translations } from '../data/translations';
+import CourseIntroModal from '../components/CourseIntroModal';
+import BrandBanner from '../components/BrandBanner';
 
 const Counter = ({ target, duration = 2000, suffix = '' }) => {
   const [count, setCount] = useState(0);
@@ -51,20 +54,28 @@ export default function Home({ currentLang = 'EN' }) {
   useEffect(() => {
     const fetchHomeData = async () => {
       try {
-        const coursesData = await api.getCoursesApi('All');
-        setCourses(coursesData || []);
+        const storeCourses = store.getCourses() || [];
+        const coursesData = await api.getCoursesApi('All').catch(() => null);
+        setCourses(coursesData && coursesData.length >= 10 ? coursesData : storeCourses);
 
-        const packagesData = await api.getPackagesApi();
-        setPackages(packagesData || []);
+        const storePackages = store.getPackages() || [];
+        const packagesData = await api.getPackagesApi().catch(() => null);
+        setPackages(packagesData && packagesData.length >= 5 ? packagesData : storePackages);
 
-        const videoData = await api.getVideoStoriesApi();
-        setVideoTestimonials(videoData || []);
+        const storeVideos = store.getVideoTestimonials() || [];
+        const videoData = await api.getVideoStoriesApi().catch(() => null);
+        setVideoTestimonials(videoData && videoData.length > 0 ? videoData : storeVideos);
 
-        const reviewsData = await api.getAdminReviewsApi();
+        const storeTestimonials = store.getTestimonials() || [];
+        const reviewsData = await api.getAdminReviewsApi().catch(() => null);
         const approved = reviewsData ? reviewsData.filter(r => r.status === 'approved') : [];
-        setTestimonials(approved);
+        setTestimonials(approved.length > 0 ? approved : storeTestimonials);
       } catch (err) {
         console.warn('Failed to load dynamic home data:', err.message);
+        setCourses(store.getCourses() || []);
+        setPackages(store.getPackages() || []);
+        setVideoTestimonials(store.getVideoTestimonials() || []);
+        setTestimonials(store.getTestimonials() || []);
       }
     };
     fetchHomeData();
@@ -72,6 +83,28 @@ export default function Home({ currentLang = 'EN' }) {
 
   const [favorites, setFavorites] = useState({});
   const [activeVideoModal, setActiveVideoModal] = useState(null);
+
+  // Brand Banners & Site Settings
+  const [brandBanners, setBrandBanners] = useState([]);
+  const [siteSettings, setSiteSettings] = useState({});
+  const [showCourseIntro, setShowCourseIntro] = useState(false);
+  const [courseIntroSlides, setCourseIntroSlides] = useState([]);
+
+  useEffect(() => {
+    // Load banners, settings, and intro slides from store
+    const banners = store.getBrandBanners();
+    setBrandBanners(banners || []);
+    const settings = store.getSiteSettings();
+    setSiteSettings(settings || {});
+    const slides = store.getCourseIntroSlides();
+    setCourseIntroSlides(slides || []);
+
+    // Show course intro popup on first visit
+    if (settings.enableCourseIntroPopup && localStorage.getItem('cc_hide_intro') !== 'true') {
+      const timer = setTimeout(() => setShowCourseIntro(true), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   const t = translations[currentLang]?.hero || translations.EN.hero;
   const tc = translations[currentLang]?.common || translations.EN.common;
@@ -142,6 +175,19 @@ export default function Home({ currentLang = 'EN' }) {
 
   return (
     <div className="bg-[#F5F9FA] min-h-screen">
+      {/* Course Intro Pop-up Modal (Skaarvi-Style) */}
+      <CourseIntroModal
+        isOpen={showCourseIntro}
+        onClose={() => setShowCourseIntro(false)}
+        slides={courseIntroSlides}
+      />
+
+      {/* Brand Partner Pop-up Ad Modal */}
+      <BrandBanner banners={brandBanners} position="popup_modal" siteSettings={siteSettings} />
+
+      {/* Top Bar Announcement Ad */}
+      <BrandBanner banners={brandBanners} position="top_bar" siteSettings={siteSettings} />
+
       {/* 1. Interactive Full-Screen Hero Carousel */}
       <section 
         className="relative h-[650px] sm:h-[700px] lg:h-[760px] bg-gray-950 text-white overflow-hidden flex items-center"
@@ -377,6 +423,9 @@ export default function Home({ currentLang = 'EN' }) {
         </div>
       </section>
 
+      {/* Sponsored Between-Sections Banner */}
+      <BrandBanner banners={brandBanners} position="between_sections" siteSettings={siteSettings} />
+
       {/* 5. Video Testimonials Cards Section */}
       <section className="py-16 md:py-24 bg-[#F5F9FA] border-t border-gray-200 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 lg:px-8">
@@ -458,33 +507,129 @@ export default function Home({ currentLang = 'EN' }) {
         </div>
       </section>
 
-      {/* 6. Why Choose Us Section */}
+      {/* 6. Why Choose Us Section - Clean White Background Design */}
       <section className="py-16 md:py-24 bg-white border-t border-gray-200">
         <div className="max-w-7xl mx-auto px-4 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-[#F5F9FA] p-8 rounded-2xl border border-gray-200/80 shadow-sm hover:shadow-md transition-shadow">
-              <div className="w-14 h-14 rounded-2xl bg-primary-container/10 text-primary-container flex items-center justify-center mb-6">
-                <GraduationCap size={32} />
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <span className="pre-title">The ClassConnect Advantage</span>
+            <h2 className="font-heading font-extrabold text-3xl md:text-4xl text-gray-900">
+              Why Ambitious Learners Choose Us
+            </h2>
+            <p className="text-gray-600 text-sm mt-2 leading-relaxed">
+              Built for maximum career velocity, hands-on production mastery, and zero language barriers.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+            
+            {/* Card 1: Outcome-Focused Learning */}
+            <div className="bg-[#F5F9FA] p-8 rounded-3xl border border-gray-200/80 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 flex flex-col justify-between">
+              <div>
+                <div className="w-14 h-14 rounded-2xl bg-blue-100/80 text-blue-600 flex items-center justify-center mb-5 shadow-sm">
+                  <GraduationCap size={30} />
+                </div>
+
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200 mb-2 inline-block">
+                  CAREER TRANSFORMATION
+                </span>
+
+                <h3 className="font-heading font-extrabold text-xl md:text-2xl text-gray-900 mb-2.5">
+                  Outcome-Focused Learning
+                </h3>
+
+                <p className="text-gray-600 text-sm leading-relaxed mb-6 font-normal">
+                  Designed around real career transformation, practical software engineering, UI/UX design, AI integration, and digital growth.
+                </p>
               </div>
-              <h3 className="font-heading font-extrabold text-xl text-gray-900 mb-3">Outcome-Focused Learning</h3>
-              <p className="text-gray-600 text-sm leading-relaxed">Designed around career transformation, practical software engineering, UI/UX design, AI integration, and digital growth.</p>
+
+              <ul className="space-y-2.5 text-xs text-gray-700 border-t border-gray-200/70 pt-5 font-semibold">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 size={15} className="text-emerald-600 flex-shrink-0" />
+                  <span>Real production project builds</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 size={15} className="text-emerald-600 flex-shrink-0" />
+                  <span>Hands-on code & design reviews</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 size={15} className="text-emerald-600 flex-shrink-0" />
+                  <span>Portfolio & resume readiness</span>
+                </li>
+              </ul>
             </div>
 
-            <div className="bg-[#F5F9FA] p-8 rounded-2xl border border-gray-200/80 shadow-sm hover:shadow-md transition-shadow">
-              <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center mb-6">
-                <Globe size={32} />
+            {/* Card 2: 100% Bilingual OS */}
+            <div className="bg-[#F5F9FA] p-8 rounded-3xl border border-gray-200/80 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 flex flex-col justify-between">
+              <div>
+                <div className="w-14 h-14 rounded-2xl bg-amber-100/80 text-amber-600 flex items-center justify-center mb-5 shadow-sm">
+                  <Globe size={30} />
+                </div>
+
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200 mb-2 inline-block">
+                  WORLD'S FIRST BILINGUAL OS
+                </span>
+
+                <h3 className="font-heading font-extrabold text-xl md:text-2xl text-gray-900 mb-2.5">
+                  100% Bilingual OS
+                </h3>
+
+                <p className="text-gray-600 text-sm leading-relaxed mb-6 font-normal">
+                  First-of-its-kind seamless Telugu and English switching across every screen, ensuring barrier-free education.
+                </p>
               </div>
-              <h3 className="font-heading font-extrabold text-xl text-gray-900 mb-3">100% Bilingual OS</h3>
-              <p className="text-gray-600 text-sm leading-relaxed">First-of-its-kind seamless Telugu and English switching across every screen, ensuring barrier-free education.</p>
+
+              <ul className="space-y-2.5 text-xs text-gray-700 border-t border-gray-200/70 pt-5 font-semibold">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 size={15} className="text-emerald-600 flex-shrink-0" />
+                  <span>Instant English ↔ Telugu toggle</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 size={15} className="text-emerald-600 flex-shrink-0" />
+                  <span>Native language concept clarity</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 size={15} className="text-emerald-600 flex-shrink-0" />
+                  <span>Zero learning barriers</span>
+                </li>
+              </ul>
             </div>
 
-            <div className="bg-[#F5F9FA] p-8 rounded-2xl border border-gray-200/80 shadow-sm hover:shadow-md transition-shadow">
-              <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-6">
-                <Award size={32} />
+            {/* Card 3: PRO Mentors & Credentials */}
+            <div className="bg-[#F5F9FA] p-8 rounded-3xl border border-gray-200/80 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 flex flex-col justify-between">
+              <div>
+                <div className="w-14 h-14 rounded-2xl bg-emerald-100/80 text-emerald-600 flex items-center justify-center mb-5 shadow-sm">
+                  <Award size={30} />
+                </div>
+
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 mb-2 inline-block">
+                  VERIFIABLE CREDENTIALS
+                </span>
+
+                <h3 className="font-heading font-extrabold text-xl md:text-2xl text-gray-900 mb-2.5">
+                  PRO Mentors & Credentials
+                </h3>
+
+                <p className="text-gray-600 text-sm leading-relaxed mb-6 font-normal">
+                  Receive live mentorship from industry faculty and earn cryptographically verifiable skill certificates.
+                </p>
               </div>
-              <h3 className="font-heading font-extrabold text-xl text-gray-900 mb-3">PRO Mentors & Credentials</h3>
-              <p className="text-gray-600 text-sm leading-relaxed">Receive live mentorship from industry faculty and earn cryptographically verifiable skill certificates.</p>
+
+              <ul className="space-y-2.5 text-xs text-gray-700 border-t border-gray-200/70 pt-5 font-semibold">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 size={15} className="text-emerald-600 flex-shrink-0" />
+                  <span>Daily live masterclass Q&A</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 size={15} className="text-emerald-600 flex-shrink-0" />
+                  <span>Verified cryptographic certificates</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 size={15} className="text-emerald-600 flex-shrink-0" />
+                  <span>1-on-1 expert mentor feedback</span>
+                </li>
+              </ul>
             </div>
+
           </div>
         </div>
       </section>
