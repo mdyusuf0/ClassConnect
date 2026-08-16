@@ -118,15 +118,6 @@ export default function CourseDetail() {
             <ArrowLeft size={16} /> Back to Courses Catalog
           </Link>
           
-          <div className="flex flex-wrap items-center gap-2 mb-3">
-            <span className="px-3 py-1 bg-amber-500/20 text-amber-400 border border-amber-400/30 text-xs font-bold uppercase rounded-md">
-              {course.category}
-            </span>
-            <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-400/30 text-xs font-bold uppercase rounded-md flex items-center gap-1">
-              <ShieldCheck size={13} /> 100% Bilingual Telugu & English
-            </span>
-          </div>
-
           <h1 className="font-heading font-extrabold text-3xl sm:text-4xl md:text-5xl max-w-4xl text-white mb-4 leading-tight">
             {course.title}
           </h1>
