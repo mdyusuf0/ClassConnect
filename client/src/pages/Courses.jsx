@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/client';
+import store from '../data/mockStore';
 import { Clock, Heart } from 'lucide-react';
 import { translations } from '../data/translations';
 
@@ -24,10 +25,12 @@ export default function Courses({ currentLang = 'EN' }) {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const data = await api.getCoursesApi(activeTab);
-        setCourses(data || []);
+        const storeCourses = store.getCoursesByCategory(activeTab);
+        const data = await api.getCoursesApi(activeTab).catch(() => null);
+        setCourses(data && data.length >= 5 ? data : storeCourses);
       } catch (err) {
         console.warn('Failed to load dynamic courses:', err.message);
+        setCourses(store.getCoursesByCategory(activeTab));
       }
     };
     fetchCourses();

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/client';
+import store from '../data/mockStore';
 import { CheckCircle2, Zap, Sparkles } from 'lucide-react';
 import { translations } from '../data/translations';
 
@@ -12,10 +13,12 @@ export default function Packages({ currentLang = 'EN' }) {
   useEffect(() => {
     const fetchPackages = async () => {
       try {
-        const data = await api.getPackagesApi();
-        setPackages(data || []);
+        const storePkgs = store.getPackages();
+        const data = await api.getPackagesApi().catch(() => null);
+        setPackages(data && data.length >= 5 ? data : storePkgs);
       } catch (err) {
         console.warn('Failed to load packages:', err.message);
+        setPackages(store.getPackages());
       }
     };
     fetchPackages();
