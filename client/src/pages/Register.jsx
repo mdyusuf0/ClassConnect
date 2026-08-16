@@ -8,72 +8,74 @@ const Register = ({ currentUser, onLogin }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const preSelectedPackageId = searchParams.get('package');
+  const preSelectedCourseId = searchParams.get('course');
+  const refCodeFromUrl = searchParams.get('ref');
 
-  // Auto-redirect if logged in or valid token/cookie present
+  // Auto-redirect to dashboard ONLY if logged in AND no specific package/course parameter is present in URL
   useEffect(() => {
-    function getCookie(name) {
-      const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-      return match ? decodeURIComponent(match[2]) : null;
+    if (currentUser && !preSelectedPackageId && !preSelectedCourseId) {
+      navigate('/dashboard', { replace: true });
     }
-    const tokenCookie = getCookie('classconnect_token') || getCookie('token') || getCookie('session');
-    const userCookie = getCookie('classconnect_user') || getCookie('user');
-    const localUser = localStorage.getItem('classconnect_user') || localStorage.getItem('user');
-    const localToken = localStorage.getItem('classconnect_token') || localStorage.getItem('token');
-
-    const hasTokenCookie = tokenCookie && tokenCookie !== 'null' && tokenCookie !== 'undefined' && tokenCookie !== '';
-    const hasUserCookie = userCookie && userCookie !== 'null' && userCookie !== 'undefined' && userCookie !== '';
-    const hasLocalUser = localUser && localUser !== 'null' && localUser !== 'undefined' && localUser !== '';
-    const hasLocalToken = localToken && localToken !== 'null' && localToken !== 'undefined' && localToken !== '';
-
-    if (currentUser || hasTokenCookie || hasUserCookie || hasLocalUser || hasLocalToken) {
-      let role = currentUser?.role;
-      if (!role && (hasUserCookie || hasLocalUser)) {
-        try {
-          const parsed = JSON.parse(userCookie || localUser);
-          role = parsed?.role;
-        } catch (e) {}
-      }
-      navigate('/', { replace: true });
-    }
-  }, [currentUser, navigate]);
+  }, [currentUser, navigate, preSelectedPackageId, preSelectedCourseId]);
 
   const [packages, setPackages] = useState([]);
   
   const [formData, setFormData] = useState({
     planId: preSelectedPackageId || '',
-    referralCode: '',
-    name: '',
+    referralCode: refCodeFromUrl || '',
+    name: currentUser?.name || '',
     state: '',
-    mobile: '',
-    email: '',
+    mobile: currentUser?.mobile || '',
+    email: currentUser?.email || '',
     password: '',
     agreeTerms: false
   });
 
   const [showPassword, setShowPassword] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
-  const [referralValid, setReferralValid] = useState(false);
+  const [referralValid, setReferralValid] = useState(!!refCodeFromUrl);
   const [showPaymentNote, setShowPaymentNote] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchPackages = async () => {
       try {
-        const allPackages = await api.getPackagesApi();
+        let allPackages = await api.getPackagesApi().catch(() => null);
+        if (!allPackages || allPackages.length === 0) {
+          allPackages = store.getPackages();
+        }
         setPackages(allPackages || []);
 
+        let matchedPlan = null;
         if (preSelectedPackageId) {
-          const match = allPackages.find(p => p.id === preSelectedPackageId);
-          if (match) {
-            setSelectedPlan(match);
-          }
+          matchedPlan = allPackages.find(p => p.id === preSelectedPackageId || p._id === preSelectedPackageId);
+        } else if (preSelectedCourseId) {
+          matchedPlan = allPackages.find(p => p.courses && p.courses.includes(preSelectedCourseId));
+        }
+
+        if (!matchedPlan && allPackages.length > 0) {
+          matchedPlan = allPackages[0];
+        }
+
+        if (matchedPlan) {
+          setSelectedPlan(matchedPlan);
+          setFormData(prev => ({
+            ...prev,
+            planId: matchedPlan.id || matchedPlan._id
+          }));
         }
       } catch (err) {
         console.warn('Failed to load register packages:', err.message);
+        const storePkgs = store.getPackages();
+        setPackages(storePkgs);
+        if (storePkgs.length > 0) {
+          setSelectedPlan(storePkgs[0]);
+          setFormData(prev => ({ ...prev, planId: storePkgs[0].id }));
+        }
       }
     };
     fetchPackages();
-  }, [preSelectedPackageId]);
+  }, [preSelectedPackageId, preSelectedCourseId]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;

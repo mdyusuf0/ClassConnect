@@ -148,16 +148,9 @@ function App() {
         <Route path="/packages" element={<Packages currentLang={currentLang} />} />
         <Route path="/contact" element={<Contact currentLang={currentLang} />} />
         
-        {/* Auth routes with auto-redirect to Home (/) if logged in */}
         <Route 
           path="/register" 
-          element={
-            isAuthenticated ? (
-              <Navigate to="/" replace />
-            ) : (
-              <Register currentUser={currentUser} onLogin={handleLogin} />
-            )
-          } 
+          element={<Register currentUser={currentUser} onLogin={handleLogin} />} 
         />
         <Route 
           path="/login" 
