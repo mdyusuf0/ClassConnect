@@ -4,7 +4,7 @@
 // Will be replaced by backend API calls later
 // ============================================
 
-const STORAGE_KEY = 'classconnect_data_v5';
+const STORAGE_KEY = 'classconnect_data_v6';
 
 // ---- Seed Data ----
 
@@ -651,6 +651,91 @@ const indianStates = [
   'Delhi', 'Jammu & Kashmir', 'Ladakh',
 ];
 
+// ---- Brand Partner Ad Banners (Zero-Cost Promotion Engine) ----
+const defaultBrandBanners = [
+  {
+    id: 'banner-1',
+    title: '🔥 Limited Offer: Get 70% OFF on Platinum All-Access Bundle!',
+    description: 'Unlock all 30+ courses, daily live masterclasses, VIP mentorship & earn ₹3,000 per referral. Offer ends soon!',
+    imageUrl: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&h=400&fit=crop',
+    redirectUrl: '/packages',
+    ctaText: 'Grab the Deal',
+    position: 'top_bar',
+    isActive: true,
+    priority: 10,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'banner-2',
+    title: 'Start Your Digital Career Today',
+    description: 'Join 10,000+ learners mastering Google Ads, AI tools, and fullstack development with bilingual Telugu & English training.',
+    imageUrl: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&h=400&fit=crop',
+    redirectUrl: '/courses',
+    ctaText: 'Explore Courses',
+    position: 'between_sections',
+    isActive: true,
+    priority: 5,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'banner-3',
+    title: '🎉 Brand Partner: TechStack Academy Collaboration',
+    description: 'Exclusive discount on TechStack premium developer tools for ClassConnect students. Use code CC2025.',
+    imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&h=400&fit=crop',
+    redirectUrl: 'https://example.com/partner-deal',
+    ctaText: 'Visit Partner',
+    position: 'popup_modal',
+    isActive: false,
+    priority: 3,
+    createdAt: new Date().toISOString(),
+  },
+];
+
+// ---- Course Intro Slides (Skaarvi-Style 3-Slide Pop-up) ----
+const defaultCourseIntroSlides = [
+  {
+    id: 'slide-1',
+    title: '100% Practical Bilingual Learning OS',
+    subtitle: 'English & Telugu',
+    description: 'Break free from generic video tutorials. ClassConnect delivers production-grade training in both English and Telugu with live PRO Mentors, real project labs, and outcome-focused curriculum.',
+    badge: 'BILINGUAL OS',
+    ctaText: 'Explore Courses',
+    ctaLink: '/courses',
+    image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&h=500&fit=crop',
+  },
+  {
+    id: 'slide-2',
+    title: 'Cryptographic Skill Credentials & Live Labs',
+    subtitle: '30+ Career-Ready Courses',
+    description: 'Earn verifiable digital certificates for every completed course. Join daily live masterclasses with senior industry mentors. Build real projects for your portfolio.',
+    badge: 'PRO CREDENTIALS',
+    ctaText: 'View Packages',
+    ctaLink: '/packages',
+    image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&h=500&fit=crop',
+  },
+  {
+    id: 'slide-3',
+    title: 'Direct Daily Referral Income & Wallet',
+    subtitle: 'Earn While You Learn',
+    description: 'Share ClassConnect with your network and earn ₹300 to ₹3,000 direct referral commission per signup. Track earnings in real-time from your personal dashboard.',
+    badge: 'EARN DAILY',
+    ctaText: 'Join Now',
+    ctaLink: '/register',
+    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&h=500&fit=crop',
+  },
+];
+
+// ---- Site Feature Visibility Settings ----
+const defaultSiteSettings = {
+  enableCourseIntroPopup: true,
+  enableTopBarAd: true,
+  enablePopupAd: false,
+  enableBetweenSectionAd: true,
+  enableVideoTestimonials: true,
+  enableReferralPayouts: true,
+  enableHeroAutoplay: true,
+};
+
 // ---- Store Helper Functions ----
 
 function loadData() {
@@ -738,6 +823,9 @@ function getDefaultData() {
         date: new Date().toISOString(),
       }
     ],
+    brandBanners: defaultBrandBanners,
+    courseIntroSlides: defaultCourseIntroSlides,
+    siteSettings: defaultSiteSettings,
     payoutRequests: [
       {
         id: 'req-9901',
@@ -770,6 +858,30 @@ function initStore() {
     const defaultData = getDefaultData();
     saveData(defaultData);
     return defaultData;
+  }
+  let updated = false;
+  if (!existing.packages || existing.packages.length < 5) {
+    existing.packages = defaultPackages;
+    updated = true;
+  }
+  if (!existing.courses || existing.courses.length < 30) {
+    existing.courses = defaultCourses;
+    updated = true;
+  }
+  if (!existing.brandBanners) {
+    existing.brandBanners = defaultBrandBanners;
+    updated = true;
+  }
+  if (!existing.courseIntroSlides) {
+    existing.courseIntroSlides = defaultCourseIntroSlides;
+    updated = true;
+  }
+  if (!existing.siteSettings) {
+    existing.siteSettings = defaultSiteSettings;
+    updated = true;
+  }
+  if (updated) {
+    saveData(existing);
   }
   return existing;
 }
@@ -1274,6 +1386,96 @@ const store = {
       }
       saveData(data);
     }
+  },
+
+  // ---- Brand Banners CRUD ----
+  getBrandBanners() {
+    const data = this.getData();
+    return data.brandBanners || defaultBrandBanners;
+  },
+
+  addBrandBanner(bannerData) {
+    const data = this.getData();
+    if (!data.brandBanners) data.brandBanners = [];
+    const newBanner = {
+      id: 'banner-' + Date.now(),
+      title: bannerData.title || 'New Promotion',
+      description: bannerData.description || '',
+      imageUrl: bannerData.imageUrl || '',
+      redirectUrl: bannerData.redirectUrl || '',
+      ctaText: bannerData.ctaText || 'Learn More',
+      position: bannerData.position || 'top_bar',
+      isActive: bannerData.isActive !== undefined ? bannerData.isActive : true,
+      priority: parseInt(bannerData.priority) || 1,
+      createdAt: new Date().toISOString(),
+    };
+    data.brandBanners.push(newBanner);
+    saveData(data);
+    return newBanner;
+  },
+
+  updateBrandBanner(id, updates) {
+    const data = this.getData();
+    if (!data.brandBanners) return null;
+    const idx = data.brandBanners.findIndex(b => b.id === id);
+    if (idx > -1) {
+      data.brandBanners[idx] = { ...data.brandBanners[idx], ...updates };
+      saveData(data);
+      return data.brandBanners[idx];
+    }
+    return null;
+  },
+
+  deleteBrandBanner(id) {
+    const data = this.getData();
+    if (!data.brandBanners) return false;
+    data.brandBanners = data.brandBanners.filter(b => b.id !== id);
+    saveData(data);
+    return true;
+  },
+
+  toggleBrandBanner(id) {
+    const data = this.getData();
+    if (!data.brandBanners) return null;
+    const banner = data.brandBanners.find(b => b.id === id);
+    if (banner) {
+      banner.isActive = !banner.isActive;
+      saveData(data);
+      return banner;
+    }
+    return null;
+  },
+
+  // ---- Course Intro Slides ----
+  getCourseIntroSlides() {
+    const data = this.getData();
+    return data.courseIntroSlides || defaultCourseIntroSlides;
+  },
+
+  updateCourseIntroSlide(id, updates) {
+    const data = this.getData();
+    if (!data.courseIntroSlides) data.courseIntroSlides = [...defaultCourseIntroSlides];
+    const idx = data.courseIntroSlides.findIndex(s => s.id === id);
+    if (idx > -1) {
+      data.courseIntroSlides[idx] = { ...data.courseIntroSlides[idx], ...updates };
+      saveData(data);
+      return data.courseIntroSlides[idx];
+    }
+    return null;
+  },
+
+  // ---- Site Settings (Feature Toggles) ----
+  getSiteSettings() {
+    const data = this.getData();
+    return data.siteSettings || { ...defaultSiteSettings };
+  },
+
+  updateSiteSettings(updates) {
+    const data = this.getData();
+    if (!data.siteSettings) data.siteSettings = { ...defaultSiteSettings };
+    data.siteSettings = { ...data.siteSettings, ...updates };
+    saveData(data);
+    return data.siteSettings;
   },
 
   // Reset store

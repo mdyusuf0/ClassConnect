@@ -3,9 +3,10 @@ import { Navigate, Link } from 'react-router-dom';
 import { 
   LayoutDashboard, BookOpen, Package, MessageSquare, 
   Users, DollarSign, LogOut, Plus, Edit, Trash2, 
-  Check, X, Image as ImageIcon, Video, Sparkles, Radio, PlayCircle, Upload, Layers, ShieldCheck, Lock, ChevronRight, BarChart2
+  Check, X, Image as ImageIcon, Video, Sparkles, Radio, PlayCircle, Upload, Layers, ShieldCheck, Lock, ChevronRight, BarChart2, Megaphone, Settings, Eye, EyeOff, ToggleLeft, ToggleRight, ExternalLink
 } from 'lucide-react';
 import api from '../api/client';
+import store from '../data/mockStore';
 import MediaUploader from '../components/MediaUploader';
 import LiveStudio from '../components/LiveStudio';
 
@@ -77,6 +78,20 @@ const AdminCMS = ({ currentUser, onLogout }) => {
     referralsEnabled: true, commissionType: 'percentage', commissionValue: 15
   });
 
+  // Brand Banners State
+  const [brandBanners, setBrandBanners] = useState([]);
+  const [showBannerForm, setShowBannerForm] = useState(false);
+  const [bannerForm, setBannerForm] = useState({
+    title: '', description: '', imageUrl: '', redirectUrl: '', ctaText: 'Learn More', position: 'top_bar', isActive: true, priority: '5'
+  });
+
+  // Course Intro Slides State
+  const [courseIntroSlides, setCourseIntroSlides] = useState([]);
+  const [editingSlide, setEditingSlide] = useState(null);
+
+  // Site Settings State
+  const [siteSettings, setSiteSettings] = useState({});
+
   useEffect(() => {
     if (currentUser && currentUser.role === 'admin') {
       loadData();
@@ -108,6 +123,11 @@ const AdminCMS = ({ currentUser, onLogout }) => {
 
       const analyticsData = await api.getAdminAnalyticsApi();
       setAnalytics(analyticsData);
+
+      // Load brand banners, slides, and settings from local store
+      setBrandBanners(store.getBrandBanners() || []);
+      setCourseIntroSlides(store.getCourseIntroSlides() || []);
+      setSiteSettings(store.getSiteSettings() || {});
     } catch (err) {
       console.error('Failed to load dynamic admin data:', err);
     }
@@ -457,6 +477,9 @@ const AdminCMS = ({ currentUser, onLogout }) => {
             { id: 'video-testimonials', label: 'Video Stories', icon: Video },
             { id: 'users', label: 'Users & Registrations', icon: Users },
             { id: 'payouts', label: 'Payout Requests', icon: DollarSign },
+            { id: 'banners', label: 'Brand Banners & Ads', icon: Megaphone },
+            { id: 'course-intro', label: 'Course Intro Modal', icon: Layers },
+            { id: 'site-settings', label: 'Site Feature Toggles', icon: Settings },
           ].map(item => (
             <button
               key={item.id}
@@ -1669,6 +1692,258 @@ const AdminCMS = ({ currentUser, onLogout }) => {
     </div>
   );
 
+  // --- Brand Banners & Ads Tab ---
+  const handleBannerSubmit = (e) => {
+    e.preventDefault();
+    store.addBrandBanner({
+      ...bannerForm,
+      priority: parseInt(bannerForm.priority) || 5,
+    });
+    setBrandBanners(store.getBrandBanners());
+    setShowBannerForm(false);
+    setBannerForm({ title: '', description: '', imageUrl: '', redirectUrl: '', ctaText: 'Learn More', position: 'top_bar', isActive: true, priority: '5' });
+  };
+
+  const handleDeleteBanner = (id) => {
+    if (window.confirm('Delete this promotional banner?')) {
+      store.deleteBrandBanner(id);
+      setBrandBanners(store.getBrandBanners());
+    }
+  };
+
+  const handleToggleBanner = (id) => {
+    store.toggleBrandBanner(id);
+    setBrandBanners(store.getBrandBanners());
+  };
+
+  const renderBrandBanners = () => (
+    <div className="space-y-6">
+      <div className="bg-white border border-gray-200/80 p-6 rounded-3xl shadow-sm flex items-center justify-between">
+        <div>
+          <h1 className="font-heading font-extrabold text-2xl text-gray-900">Brand Banners & Promotional Ads</h1>
+          <p className="text-xs text-gray-500 mt-1">Manage zero-cost brand partner promotions, sponsored deals, and custom advertisement banners.</p>
+        </div>
+        <button 
+          onClick={() => setShowBannerForm(true)} 
+          className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-gray-950 font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer"
+        >
+          <Plus size={16} /> Add Banner
+        </button>
+      </div>
+
+      {showBannerForm && (
+        <form onSubmit={handleBannerSubmit} className="bg-white p-6 rounded-3xl border border-amber-200 shadow-md space-y-4 max-w-2xl">
+          <h3 className="font-heading font-extrabold text-lg text-gray-900">Create New Promotional Banner</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="md:col-span-2">
+              <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Banner Title *</label>
+              <input type="text" value={bannerForm.title} onChange={e => setBannerForm({...bannerForm, title: e.target.value})} required className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-900" placeholder="e.g. 🔥 Limited Offer: 70% OFF!" />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Description</label>
+              <textarea value={bannerForm.description} onChange={e => setBannerForm({...bannerForm, description: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-900" rows="2" placeholder="Promotional description text..." />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Banner Image URL</label>
+              <input type="text" value={bannerForm.imageUrl} onChange={e => setBannerForm({...bannerForm, imageUrl: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-900" placeholder="https://..." />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Redirect Link (URL or Route) *</label>
+              <input type="text" value={bannerForm.redirectUrl} onChange={e => setBannerForm({...bannerForm, redirectUrl: e.target.value})} required className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-900" placeholder="/packages or https://partner.com" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-700 uppercase mb-1">CTA Button Text</label>
+              <input type="text" value={bannerForm.ctaText} onChange={e => setBannerForm({...bannerForm, ctaText: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-900" placeholder="Learn More" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Priority (1-10)</label>
+              <input type="number" value={bannerForm.priority} onChange={e => setBannerForm({...bannerForm, priority: e.target.value})} min="1" max="10" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-900" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Display Position *</label>
+              <select value={bannerForm.position} onChange={e => setBannerForm({...bannerForm, position: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-900">
+                <option value="top_bar">Top Bar Announcement Strip</option>
+                <option value="popup_modal">Pop-up Modal Ad</option>
+                <option value="between_sections">Between-Sections Wide Banner</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2 pt-5">
+              <input type="checkbox" checked={bannerForm.isActive} onChange={e => setBannerForm({...bannerForm, isActive: e.target.checked})} id="bannerActive" className="rounded text-amber-500 focus:ring-amber-400" />
+              <label htmlFor="bannerActive" className="text-xs font-bold text-gray-700 uppercase">Active (Live on Website)</label>
+            </div>
+          </div>
+          <div className="flex gap-2 pt-2">
+            <button type="submit" className="px-5 py-2.5 bg-[#001845] hover:bg-[#002B70] text-white font-heading font-extrabold text-xs uppercase tracking-wider rounded-xl shadow cursor-pointer">Save Banner</button>
+            <button type="button" onClick={() => setShowBannerForm(false)} className="px-5 py-2.5 bg-gray-100 text-gray-700 font-bold text-xs uppercase tracking-wider rounded-xl cursor-pointer">Cancel</button>
+          </div>
+        </form>
+      )}
+
+      <div className="bg-white rounded-3xl p-6 border border-gray-200/80 shadow-sm overflow-x-auto">
+        <table className="w-full text-left text-xs">
+          <thead>
+            <tr className="border-b border-gray-200 bg-gray-50 text-gray-600 font-heading font-bold uppercase tracking-wider">
+              <th className="py-3 px-4">Banner Title</th>
+              <th className="py-3 px-4">Position</th>
+              <th className="py-3 px-4">Redirect</th>
+              <th className="py-3 px-4">Priority</th>
+              <th className="py-3 px-4">Status</th>
+              <th className="py-3 px-4">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {brandBanners.map(b => (
+              <tr key={b.id} className="hover:bg-gray-50/50">
+                <td className="py-3 px-4 font-bold text-gray-900 max-w-xs truncate">{b.title}</td>
+                <td className="py-3 px-4">
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase ${
+                    b.position === 'top_bar' ? 'bg-blue-100 text-blue-800' :
+                    b.position === 'popup_modal' ? 'bg-purple-100 text-purple-800' :
+                    'bg-emerald-100 text-emerald-800'
+                  }`}>
+                    {b.position === 'top_bar' ? 'Top Bar' : b.position === 'popup_modal' ? 'Pop-up Modal' : 'Between Sections'}
+                  </span>
+                </td>
+                <td className="py-3 px-4 text-gray-500 max-w-[120px] truncate">
+                  <span className="flex items-center gap-1">{b.redirectUrl} <ExternalLink size={10} /></span>
+                </td>
+                <td className="py-3 px-4 text-amber-600 font-bold">{b.priority}</td>
+                <td className="py-3 px-4">
+                  <button 
+                    onClick={() => handleToggleBanner(b.id)} 
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-extrabold uppercase cursor-pointer transition-all ${
+                      b.isActive ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                    }`}
+                  >
+                    {b.isActive ? <><Eye size={10} /> LIVE</> : <><EyeOff size={10} /> OFF</>}
+                  </button>
+                </td>
+                <td className="py-3 px-4">
+                  <button onClick={() => handleDeleteBanner(b.id)} className="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-600 font-bold rounded-lg text-[10px] cursor-pointer flex items-center gap-1">
+                    <Trash2 size={10} /> Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {brandBanners.length === 0 && (
+          <div className="text-center py-8 text-gray-400 text-xs">No promotional banners created yet. Click "Add Banner" to create your first brand advertisement.</div>
+        )}
+      </div>
+    </div>
+  );
+
+  // --- Course Intro Modal Editor Tab ---
+  const handleSaveSlide = (slideId) => {
+    if (!editingSlide) return;
+    store.updateCourseIntroSlide(slideId, editingSlide);
+    setCourseIntroSlides(store.getCourseIntroSlides());
+    setEditingSlide(null);
+  };
+
+  const renderCourseIntro = () => (
+    <div className="space-y-6">
+      <div className="bg-white border border-gray-200/80 p-6 rounded-3xl shadow-sm">
+        <h1 className="font-heading font-extrabold text-2xl text-gray-900">Course Introduction Modal (Skaarvi-Style)</h1>
+        <p className="text-xs text-gray-500 mt-1">Edit the 3-slide interactive course introduction pop-up that appears when users first visit the website.</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {courseIntroSlides.map((slide, idx) => (
+          <div key={slide.id} className="bg-white rounded-3xl border border-gray-200/80 shadow-sm overflow-hidden">
+            {slide.image && (
+              <img src={slide.image} alt={slide.title} className="w-full h-40 object-cover" />
+            )}
+            <div className="p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="bg-amber-100 text-amber-800 text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase border border-amber-200">{slide.badge}</span>
+                <span className="text-[10px] text-gray-400 font-bold">Slide {idx + 1}</span>
+              </div>
+              
+              {editingSlide && editingSlide.id === slide.id ? (
+                <div className="space-y-2">
+                  <input type="text" value={editingSlide.title} onChange={e => setEditingSlide({...editingSlide, title: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs text-gray-900" placeholder="Title" />
+                  <input type="text" value={editingSlide.subtitle} onChange={e => setEditingSlide({...editingSlide, subtitle: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs text-gray-900" placeholder="Subtitle" />
+                  <textarea value={editingSlide.description} onChange={e => setEditingSlide({...editingSlide, description: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs text-gray-900" rows="3" placeholder="Description" />
+                  <input type="text" value={editingSlide.badge} onChange={e => setEditingSlide({...editingSlide, badge: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs text-gray-900" placeholder="Badge Text" />
+                  <input type="text" value={editingSlide.ctaText} onChange={e => setEditingSlide({...editingSlide, ctaText: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs text-gray-900" placeholder="CTA Button Text" />
+                  <input type="text" value={editingSlide.ctaLink} onChange={e => setEditingSlide({...editingSlide, ctaLink: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs text-gray-900" placeholder="CTA Link e.g. /courses" />
+                  <input type="text" value={editingSlide.image} onChange={e => setEditingSlide({...editingSlide, image: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs text-gray-900" placeholder="Image URL" />
+                  <div className="flex gap-2 pt-1">
+                    <button onClick={() => handleSaveSlide(slide.id)} className="px-3 py-1.5 bg-[#001845] text-white font-bold text-[10px] uppercase rounded-lg cursor-pointer">Save</button>
+                    <button onClick={() => setEditingSlide(null)} className="px-3 py-1.5 bg-gray-100 text-gray-700 font-bold text-[10px] uppercase rounded-lg cursor-pointer">Cancel</button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <h4 className="font-heading font-extrabold text-sm text-gray-900">{slide.title}</h4>
+                  <p className="text-amber-600 text-[11px] font-bold">{slide.subtitle}</p>
+                  <p className="text-gray-500 text-[11px] leading-relaxed line-clamp-3">{slide.description}</p>
+                  <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                    <span className="text-[10px] text-gray-400">CTA: {slide.ctaText} → {slide.ctaLink}</span>
+                    <button 
+                      onClick={() => setEditingSlide({...slide})} 
+                      className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold text-[10px] uppercase rounded-lg cursor-pointer flex items-center gap-1 border border-amber-200"
+                    >
+                      <Edit size={10} /> Edit
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  // --- Site Feature Toggles Tab ---
+  const handleToggleSetting = (key) => {
+    const updated = store.updateSiteSettings({ [key]: !siteSettings[key] });
+    setSiteSettings(updated);
+  };
+
+  const settingsConfig = [
+    { key: 'enableCourseIntroPopup', label: 'Course Intro Pop-up Modal', desc: 'Show the 3-slide course introduction pop-up to first-time visitors.' },
+    { key: 'enableTopBarAd', label: 'Top Bar Announcement Banner', desc: 'Display the top announcement strip ad above the header.' },
+    { key: 'enablePopupAd', label: 'Brand Pop-up Ad Modal', desc: 'Show brand partner promotional pop-up modal to visitors.' },
+    { key: 'enableBetweenSectionAd', label: 'Between-Sections Sponsored Banner', desc: 'Show sponsored wide banner between homepage sections.' },
+    { key: 'enableVideoTestimonials', label: 'Video Testimonial Stories', desc: 'Display student video success stories on the homepage.' },
+    { key: 'enableReferralPayouts', label: 'Referral Commission Payouts', desc: 'Allow students to request referral commission payouts.' },
+    { key: 'enableHeroAutoplay', label: 'Hero Carousel Auto-Play', desc: 'Auto-advance hero carousel slides every 6 seconds.' },
+  ];
+
+  const renderSiteSettings = () => (
+    <div className="space-y-6">
+      <div className="bg-white border border-gray-200/80 p-6 rounded-3xl shadow-sm">
+        <h1 className="font-heading font-extrabold text-2xl text-gray-900">Site Feature Visibility Toggles</h1>
+        <p className="text-xs text-gray-500 mt-1">Control which features, pop-ups, banners, and sections are visible on the website. Changes take effect immediately.</p>
+      </div>
+
+      <div className="bg-white rounded-3xl p-6 border border-gray-200/80 shadow-sm max-w-2xl space-y-1">
+        {settingsConfig.map(cfg => (
+          <div key={cfg.key} className="flex items-center justify-between py-4 border-b border-gray-100 last:border-0">
+            <div className="flex-1 mr-4">
+              <h4 className="font-heading font-extrabold text-sm text-gray-900">{cfg.label}</h4>
+              <p className="text-[11px] text-gray-500 mt-0.5">{cfg.desc}</p>
+            </div>
+            <button
+              onClick={() => handleToggleSetting(cfg.key)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
+                siteSettings[cfg.key]
+                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 hover:bg-emerald-200'
+                  : 'bg-gray-100 text-gray-500 border border-gray-200 hover:bg-gray-200'
+              }`}
+            >
+              {siteSettings[cfg.key] ? <><ToggleRight size={14} /> ON</> : <><ToggleLeft size={14} /> OFF</>}
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard': return renderDashboard();
@@ -1680,9 +1955,13 @@ const AdminCMS = ({ currentUser, onLogout }) => {
       case 'video-testimonials': return renderVideoTestimonials();
       case 'users': return renderUsers();
       case 'payouts': return renderPayouts();
+      case 'banners': return renderBrandBanners();
+      case 'course-intro': return renderCourseIntro();
+      case 'site-settings': return renderSiteSettings();
       default: return renderDashboard();
     }
   };
+
 
   return (
     <div className="min-h-screen bg-[#F5F9FA] flex flex-col md:flex-row text-gray-900 font-sans">
